@@ -1,2 +1,4 @@
 # Coding-sample
-- coding sample for STATA and R
+- Trade data analysis using STATA
+# Project description & Data source
+- The objective is to study the effects of currency unions on trade. The data folder contains five files: DOTS1960 2005.dta, pwt.dta, RTA.dta, CU.dta, and dist cepii.dta. The first contains bilateral trade values by origin and destination countries, every 5 years over the period 1960-2005. The second contains country level data such as population and GDP. The third and fourth files contain information on regional trade agreements and currency unions, i.e. whether the two countries are engaged in a trade agreement (customs unions or free trade areas) and / or in a currency union in year t. The last file contains information on time-invariant variables which might affect trade costs between countries. More information on data sources, as well as two papers related to the effect of currency unions on trade and to gravity equations, can be found in the documentation folder.
