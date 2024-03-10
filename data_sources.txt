@@ -1,0 +1,11 @@
+Data sources
+
+dots1980_2008.dta: Bilateral trade data from the Direction of Trade Statistics (IMF) from 1960 to 2005, every 5 years.
+
+dist_cepii.dta: CEPII dataset on bilateral distance and other trade costs. (www.cepii.fr)
+
+RTA: Regional trade agreements from José de Sousa (http://jdesousa.univ.free.fr/data.htm)
+
+CU: Currency unions from from José de Sousa (http://jdesousa.univ.free.fr/data.htm)
+
+PWT: Penn World Tables 7.1.
