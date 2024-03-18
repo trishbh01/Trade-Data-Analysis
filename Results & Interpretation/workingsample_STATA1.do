@@ -3,7 +3,7 @@
 *--------------------------------------------------------------------------*
 
 /* defining path */
-cd "E:\trade\PS_2023Solutions (1)\MaterialEx2"
+cd "E:\trade\Workingsample1"
 
 cap log close
 log using Workingsample1.log, replace
