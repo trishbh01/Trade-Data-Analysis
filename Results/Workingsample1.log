@@ -1,0 +1,2282 @@
+-------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  E:\trade\PS_2023Solutions (1)\MaterialEx2\Workingsample1.log
+  log type:  text
+ opened on:  19 Mar 2024, 19:23:39
+
+. 
+end of do-file
+
+. do "C:\Users\HP\AppData\Local\Temp\STD6a9c_000000.tmp"
+
+. use dots1960_2005, replace
+
+. ssc install reghdfe
+checking reghdfe consistency and verifying not already installed...
+all files already exist and are up to date.
+
+. ssc install ppmlhdfe
+checking ppmlhdfe consistency and verifying not already installed...
+all files already exist and are up to date.
+
+. ssc instal  xtpqml
+checking xtpqml consistency and verifying not already installed...
+all files already exist and are up to date.
+
+. ssc install ftools
+checking ftools consistency and verifying not already installed...
+all files already exist and are up to date.
+
+. 
+end of do-file
+
+. do "C:\Users\HP\AppData\Local\Temp\STD6a9c_000000.tmp"
+
+. /* merge with geographical data */
+. sort  iso_o iso_d 
+
+. merge iso_o iso_d using dist_cepii, nokeep
+(you are using old merge syntax; see [D] merge for new syntax)
+variables iso_o iso_d do not uniquely identify observations in the master
+    data
+
+. tab  _merge
+
+     _merge |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          1 |     10,290        2.85        2.85
+          3 |    350,810       97.15      100.00
+------------+-----------------------------------
+      Total |    361,100      100.00
+
+. drop _merge
+
+. 
+end of do-file
+
+. do "C:\Users\HP\AppData\Local\Temp\STD6a9c_000000.tmp"
+
+. *
+. /* merge with RTA data */
+. sort  iso_o iso_d year
+
+. merge iso_o iso_d year using rta, nokeep
+(you are using old merge syntax; see [D] merge for new syntax)
+
+. tab  _merge
+
+     _merge |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          1 |     10,290        2.85        2.85
+          3 |    350,810       97.15      100.00
+------------+-----------------------------------
+      Total |    361,100      100.00
+
+. drop _merge
+
+. *
+. /* merge with RTA data */
+. sort  iso_o iso_d year
+
+. merge iso_o iso_d year using cu, nokeep
+(you are using old merge syntax; see [D] merge for new syntax)
+(variable year was int, now float to accommodate using data's values)
+
+. tab  _merge
+
+     _merge |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          1 |     11,840        3.28        3.28
+          3 |    349,260       96.72      100.00
+------------+-----------------------------------
+      Total |    361,100      100.00
+
+. drop _merge
+
+. *
+. 
+end of do-file
+
+. do "C:\Users\HP\AppData\Local\Temp\STD6a9c_000000.tmp"
+
+. /* merge with importer and exporter characteristics */
+. foreach var in o d{
+  2.         rename iso_`var' iso3
+  3.         sort iso3 year
+  4.         merge iso3 year using pwt, nokeep
+  5.         tab _merge
+  6.         drop _merge
+  7.         g gdp  = cgdp*pop
+  8.         rename iso3 iso_`var'
+  9.         rename pop  pop_`var'
+ 10.         rename cgdp cgdp_`var'
+ 11.         rename pc   pc_`var' 
+ 12.         rename gdp  gdp_`var'
+ 13. }
+(you are using old merge syntax; see [D] merge for new syntax)
+variables iso3 year do not uniquely identify observations in the master data
+
+     _merge |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          1 |     35,580        9.85        9.85
+          3 |    325,520       90.15      100.00
+------------+-----------------------------------
+      Total |    361,100      100.00
+(80,787 missing values generated)
+(you are using old merge syntax; see [D] merge for new syntax)
+variables iso3 year do not uniquely identify observations in the master data
+
+     _merge |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          1 |     35,580        9.85        9.85
+          3 |    325,520       90.15      100.00
+------------+-----------------------------------
+      Total |    361,100      100.00
+(80,787 missing values generated)
+
+. 
+end of do-file
+
+. do "C:\Users\HP\AppData\Local\Temp\STD6a9c_000000.tmp"
+
+. /* generate country pair identifier  */
+. egen dyad = group(iso_o iso_d)
+
+. g ltrade  = log(flow)
+(237,150 missing values generated)
+
+. g ldist   = log(dist)
+(10,290 missing values generated)
+
+. g lgdp_o  = log(gdp_o)
+(80,787 missing values generated)
+
+. g lgdp_d  = log(gdp_d)
+(80,787 missing values generated)
+
+. tsset dyad year
+
+Panel variable: dyad (strongly balanced)
+ Time variable: year, 1960 to 2005, but with gaps
+         Delta: 1 unit
+
+. *
+. /* generate year dummy  */
+. tab year, gen(yeard)
+
+       year |      Freq.     Percent        Cum.
+------------+-----------------------------------
+       1960 |     36,110       10.00       10.00
+       1965 |     36,110       10.00       20.00
+       1970 |     36,110       10.00       30.00
+       1975 |     36,110       10.00       40.00
+       1980 |     36,110       10.00       50.00
+       1985 |     36,110       10.00       60.00
+       1990 |     36,110       10.00       70.00
+       1995 |     36,110       10.00       80.00
+       2000 |     36,110       10.00       90.00
+       2005 |     36,110       10.00      100.00
+------------+-----------------------------------
+      Total |    361,100      100.00
+
+. /* generate variables for importer and exporter FE */ 
+. egen imp = group(iso_d)
+
+. egen exp = group(iso_o)
+
+. /* generate variable for importer*year and exporter*year FE */
+. egen it = group(exp year)
+
+. egen jt = group(imp year)
+
+. 
+. save working_sample1, replace
+file working_sample1.dta saved
+
+. 
+end of do-file
+
+. do "C:\Users\HP\AppData\Local\Temp\STD6a9c_000000.tmp"
+
+. **************
+. * Summary*
+. **************
+. 
+. ssc install distinct 
+checking distinct consistency and verifying not already installed...
+all files already exist and are up to date.
+
+. use working_sample1, clear
+
+. distinct year
+
+       |        Observations
+       |      total   distinct
+-------+----------------------
+  year |     361100         10
+
+. distinct iso_o iso_d
+
+       |        Observations
+       |      total   distinct
+-------+----------------------
+ iso_o |     361100        204
+ iso_d |     361100        204
+
+. sum flow
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+   flow_dots |    246,226    5.02e+08    2.47e+10          0   4.67e+12
+
+. sum flow if comcur == 1
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+   flow_dots |      4,262    6.24e+08    4.81e+09          0   1.01e+11
+
+. *
+. tab comcur 
+
+=1 if iso_o |
+  and iso_d |
+      use a |
+     common |
+currency at |
+     year t |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |    343,756       98.42       98.42
+          1 |      5,504        1.58      100.00
+------------+-----------------------------------
+      Total |    349,260      100.00
+
+. tab rta
+
+     =1 for |
+   regional |
+      trade |
+  agreement |
+   in force |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |    343,312       97.86       97.86
+          1 |      7,498        2.14      100.00
+------------+-----------------------------------
+      Total |    350,810      100.00
+
+. 
+end of do-file
+
+. do "C:\Users\HP\AppData\Local\Temp\STD6a9c_000000.tmp"
+
+. **************
+. * Looking at the share of countries and trade belonging to RTAs and CUs evolv
+> ed over the period *
+. **************
+. 
+. * Share of trade, FTAs *
+. use working_sample1, clear
+
+. bys year: egen tot_trade = sum(flow)
+
+. keep if rta == 1
+(353,602 observations deleted)
+
+. collapse (sum) flow (max) tot_trade, by(year)
+
+. g share_trade = flow/tot_trade
+
+. twoway line share_trade year 
+
+. graph export trade_fta.eps, as(eps) replace
+(file trade_fta.eps not found)
+file trade_fta.eps saved as EPS format
+
+. 
+. * Share of country pairs, FTA *
+. use working_sample1, clear
+
+. collapse (sum) rta (max) dyad,  by(year)
+
+. g share_pair = rta/dyad
+
+. twoway line share_pair year 
+
+. graph export pairs_fta.eps, as(eps) replace
+(file pairs_fta.eps not found)
+file pairs_fta.eps saved as EPS format
+
+. 
+. * Share of trade, currency unions *
+. use working_sample1, clear
+
+. bys year: egen tot_trade = sum(flow)
+
+. keep if comcur == 1
+(355,596 observations deleted)
+
+. collapse (sum) flow (max) tot_trade, by(year)
+
+. g share_trade = flow/tot_trade
+
+. twoway line share_trade year 
+
+. graph export trade_comcur.eps, as(eps) replace
+(file trade_comcur.eps not found)
+file trade_comcur.eps saved as EPS format
+
+. 
+. * Share of country pairs, currency unions *
+. use working_sample1, clear
+
+. collapse (sum) comcur (max) dyad,  by(year)
+
+. g share_pair = comcur/dyad
+
+. twoway line share_pair year 
+
+. graph export pairs_comcur.eps, as(eps) replace
+(file pairs_comcur.eps not found)
+file pairs_comcur.eps saved as EPS format
+
+. 
+end of do-file
+
+. do "C:\Users\HP\AppData\Local\Temp\STD6a9c_000000.tmp"
+
+. **************
+. * Estimate the currency union effect *
+. **************
+. 
+. use working_sample1, clear
+
+. 
+. /* only GDP / distance */
+. eststo: reg ltrade lgdp_o lgdp_d ldist yeard*, cluster(dyad)
+note: yeard1 omitted because of collinearity.
+
+Linear regression                               Number of obs     =    102,018
+                                                F(12, 22123)      =    3509.23
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.5784
+                                                Root MSE          =     2.0696
+
+                              (Std. err. adjusted for 22,124 clusters in dyad)
+------------------------------------------------------------------------------
+             |               Robust
+      ltrade | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      lgdp_o |    .960094   .0063573   151.02   0.000     .9476333    .9725547
+      lgdp_d |   .8419324   .0064097   131.35   0.000     .8293689    .8544959
+       ldist |  -1.214659    .017027   -71.34   0.000    -1.248033   -1.181284
+      yeard1 |          0  (omitted)
+      yeard2 |  -.1743362   .0252453    -6.91   0.000    -.2238187   -.1248537
+      yeard3 |  -.9220883   .0301296   -30.60   0.000    -.9811445   -.8630321
+      yeard4 |  -1.102109   .0323028   -34.12   0.000    -1.165425   -1.038793
+      yeard5 |  -1.541424   .0354567   -43.47   0.000    -1.610922   -1.471927
+      yeard6 |  -2.213131   .0373189   -59.30   0.000    -2.286279   -2.139984
+      yeard7 |  -2.463268   .0383452   -64.24   0.000    -2.538427   -2.388109
+      yeard8 |  -2.869531   .0383243   -74.88   0.000     -2.94465   -2.794413
+      yeard9 |  -3.301634   .0392076   -84.21   0.000    -3.378484   -3.224785
+     yeard10 |   -3.43043   .0414843   -82.69   0.000    -3.511742   -3.349118
+       _cons |  -3.470469   .2164156   -16.04   0.000    -3.894659   -3.046279
+------------------------------------------------------------------------------
+(est1 stored)
+
+. /* GDP / distance + regional */
+. eststo: reg ltrade comcur lgdp_o lgdp_d ldist rta yeard*, cluster(dyad)
+note: yeard2 omitted because of collinearity.
+
+Linear regression                               Number of obs     =    101,343
+                                                F(14, 21993)      =    3770.45
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.5813
+                                                Root MSE          =     2.0211
+
+                              (Std. err. adjusted for 21,994 clusters in dyad)
+------------------------------------------------------------------------------
+             |               Robust
+      ltrade | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      comcur |    1.31544    .091086    14.44   0.000     1.136905    1.493976
+      lgdp_o |   .9557637   .0061244   156.06   0.000     .9437595    .9677679
+      lgdp_d |   .8378205   .0062092   134.93   0.000     .8256499     .849991
+       ldist |  -.9241965   .0155702   -59.36   0.000    -.9547152   -.8936778
+         rta |   1.281869   .0419213    30.58   0.000       1.1997    1.364037
+      yeard1 |   .2263322   .0241824     9.36   0.000     .1789329    .2737316
+      yeard2 |          0  (omitted)
+      yeard3 |   -.712982   .0250997   -28.41   0.000    -.7621791   -.6637849
+      yeard4 |  -.9034293   .0277076   -32.61   0.000    -.9577382   -.8491204
+      yeard5 |  -1.338726   .0308338   -43.42   0.000    -1.399163    -1.27829
+      yeard6 |   -2.00941   .0323213   -62.17   0.000    -2.072762   -1.946058
+      yeard7 |  -2.258665   .0332117   -68.01   0.000    -2.323762   -2.193568
+      yeard8 |  -2.670227   .0332376   -80.34   0.000    -2.735375   -2.605079
+      yeard9 |  -3.110651   .0338753   -91.83   0.000    -3.177049   -3.044253
+     yeard10 |  -3.308567   .0362252   -91.33   0.000    -3.379571   -3.237563
+       _cons |  -6.125735   .2055298   -29.80   0.000    -6.528588   -5.722882
+------------------------------------------------------------------------------
+(est2 stored)
+
+. /* other trade costs proxies */
+. eststo: reg ltrade comcur lgdp_o lgdp_d ldist rta contig comlang_off colony y
+> eard*, cluster(dyad)
+note: yeard2 omitted because of collinearity.
+
+Linear regression                               Number of obs     =    101,343
+                                                F(17, 21993)      =    3390.04
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.5959
+                                                Root MSE          =     1.9857
+
+                              (Std. err. adjusted for 21,994 clusters in dyad)
+------------------------------------------------------------------------------
+             |               Robust
+      ltrade | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      comcur |   .9172674    .090544    10.13   0.000     .7397947     1.09474
+      lgdp_o |   .9664938   .0059453   162.56   0.000     .9548405    .9781471
+      lgdp_d |   .8469633   .0060193   140.71   0.000      .835165    .8587616
+       ldist |  -.8518687   .0161649   -52.70   0.000    -.8835531   -.8201843
+         rta |   1.290654     .04069    31.72   0.000     1.210899    1.370409
+      contig |   .3606951   .0770556     4.68   0.000     .2096605    .5117296
+ comlang_off |   .6731775   .0354586    18.98   0.000     .6036762    .7426789
+      colony |   1.334196   .0838315    15.92   0.000      1.16988    1.498512
+      yeard1 |   .2216844   .0239608     9.25   0.000     .1747195    .2686493
+      yeard2 |          0  (omitted)
+      yeard3 |  -.7000549   .0247672   -28.27   0.000    -.7486003   -.6515095
+      yeard4 |  -.8903014   .0273818   -32.51   0.000    -.9439716   -.8366312
+      yeard5 |  -1.341188   .0304587   -44.03   0.000    -1.400889   -1.281487
+      yeard6 |  -2.014161   .0319249   -63.09   0.000    -2.076736   -1.951586
+      yeard7 |  -2.253891   .0327913   -68.73   0.000    -2.318164   -2.189617
+      yeard8 |  -2.631966   .0327536   -80.36   0.000    -2.696165   -2.567766
+      yeard9 |  -3.068701   .0333842   -91.92   0.000    -3.134137   -3.003266
+     yeard10 |  -3.272676   .0357248   -91.61   0.000    -3.342699   -3.202653
+       _cons |  -7.284848   .2080448   -35.02   0.000    -7.692631   -6.877065
+------------------------------------------------------------------------------
+(est3 stored)
+
+. /*country FE */
+. eststo: reghdfe ltrade comcur lgdp_o lgdp_d ldist rta contig comlang_off colo
+> ny yeard*, a(exp imp) vce(cluster dyad)
+(MWFE estimator converged in 6 iterations)
+note: yeard10 omitted because of collinearity
+
+HDFE Linear regression                            Number of obs   =    101,343
+Absorbing 2 HDFE groups                           F(  17,  21993) =    1559.94
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.6970
+                                                  Adj R-squared   =     0.6958
+                                                  Within R-sq.    =     0.3760
+Number of clusters (dyad)    =     21,994         Root MSE        =     1.7225
+
+                              (Std. err. adjusted for 21,994 clusters in dyad)
+------------------------------------------------------------------------------
+             |               Robust
+      ltrade | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      comcur |   .7875602   .0810164     9.72   0.000     .6287623    .9463582
+      lgdp_o |   1.083655   .0303371    35.72   0.000     1.024193    1.143118
+      lgdp_d |   .8388217   .0293896    28.54   0.000      .781216    .8964273
+       ldist |  -1.152688   .0179575   -64.19   0.000    -1.187886    -1.11749
+         rta |   .7186686    .040055    17.94   0.000     .6401578    .7971793
+      contig |   .5253072   .0773571     6.79   0.000     .3736818    .6769327
+ comlang_off |   .5714144    .032565    17.55   0.000     .5075846    .6352442
+      colony |   1.231015   .0741393    16.60   0.000     1.085697    1.376334
+      yeard1 |   3.403934    .144743    23.52   0.000     3.120228    3.687641
+      yeard2 |   3.167339    .130175    24.33   0.000     2.912186    3.422491
+      yeard3 |   2.506881   .1119981    22.38   0.000     2.287357    2.726406
+      yeard4 |   2.291661   .0900921    25.44   0.000     2.115074    2.468248
+      yeard5 |   1.764762   .0672076    26.26   0.000      1.63303    1.896494
+      yeard6 |   1.042717   .0530136    19.67   0.000     .9388064    1.146627
+      yeard7 |   .8201338   .0403475    20.33   0.000     .7410497    .8992178
+      yeard8 |   .5759495   .0297763    19.34   0.000     .5175857    .6343132
+      yeard9 |   .1833201   .0200677     9.14   0.000      .143986    .2226541
+     yeard10 |          0  (omitted)
+       _cons |  -9.742475    .787817   -12.37   0.000    -11.28665   -8.198297
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-----------------------------------------------------+
+ Absorbed FE | Categories  - Redundant  = Num. Coefs |
+-------------+---------------------------------------|
+         exp |       181           0         181     |
+         imp |       181           1         180     |
+-----------------------------------------------------+
+(est4 stored)
+
+. 
+. *
+. set linesize 250
+
+. esttab, mtitles drop(yeard* _cons ) b(%5.3f) se(%5.3f) compress r2 starlevels(c 0.1 b 0.05 a 0.01)  se 
+
+------------------------------------------------------
+                 (1)        (2)        (3)        (4) 
+                est1       est2       est3       est4 
+------------------------------------------------------
+lgdp_o         0.960a     0.956a     0.966a     1.084a
+             (0.006)    (0.006)    (0.006)    (0.030) 
+
+lgdp_d         0.842a     0.838a     0.847a     0.839a
+             (0.006)    (0.006)    (0.006)    (0.029) 
+
+ldist         -1.215a    -0.924a    -0.852a    -1.153a
+             (0.017)    (0.016)    (0.016)    (0.018) 
+
+comcur                    1.315a     0.917a     0.788a
+                        (0.091)    (0.091)    (0.081) 
+
+rta                       1.282a     1.291a     0.719a
+                        (0.042)    (0.041)    (0.040) 
+
+contig                               0.361a     0.525a
+                                   (0.077)    (0.077) 
+
+comlang_~f                           0.673a     0.571a
+                                   (0.035)    (0.033) 
+
+colony                               1.334a     1.231a
+                                   (0.084)    (0.074) 
+------------------------------------------------------
+N             102018     101343     101343     101343 
+R-sq           0.578      0.581      0.596      0.697 
+------------------------------------------------------
+Standard errors in parentheses
+c p<0.1, b p<0.05, a p<0.01
+
+. esttab, mtitles drop(yeard* _cons ) b(%5.3f) se(%5.3f) r2  starlevels({$^c$} 0.1 {$^b$} 0.05 {$^a$} 0.01) se tex label  title() 
+
+{
+\def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
+\begin{tabular}{l*{4}{c}}
+\hline\hline
+                    &\multicolumn{1}{c}{(1)}&\multicolumn{1}{c}{(2)}&\multicolumn{1}{c}{(3)}&\multicolumn{1}{c}{(4)}\\
+                    &\multicolumn{1}{c}{est1}&\multicolumn{1}{c}{est2}&\multicolumn{1}{c}{est3}&\multicolumn{1}{c}{est4}\\
+\hline
+lgdp\_o              &       0.960{$^a$}&       0.956{$^a$}&       0.966{$^a$}&       1.084{$^a$}\\
+                    &     (0.006)      &     (0.006)      &     (0.006)      &     (0.030)      \\
+[1em]
+lgdp\_d              &       0.842{$^a$}&       0.838{$^a$}&       0.847{$^a$}&       0.839{$^a$}\\
+                    &     (0.006)      &     (0.006)      &     (0.006)      &     (0.029)      \\
+[1em]
+ldist               &      -1.215{$^a$}&      -0.924{$^a$}&      -0.852{$^a$}&      -1.153{$^a$}\\
+                    &     (0.017)      &     (0.016)      &     (0.016)      &     (0.018)      \\
+[1em]
+=1 if iso\_o and iso\_d use a common currency at year t&                  &       1.315{$^a$}&       0.917{$^a$}&       0.788{$^a$}\\
+                    &                  &     (0.091)      &     (0.091)      &     (0.081)      \\
+[1em]
+=1 for regional trade agreement in force&                  &       1.282{$^a$}&       1.291{$^a$}&       0.719{$^a$}\\
+                    &                  &     (0.042)      &     (0.041)      &     (0.040)      \\
+[1em]
+1 for contiguity    &                  &                  &       0.361{$^a$}&       0.525{$^a$}\\
+                    &                  &                  &     (0.077)      &     (0.077)      \\
+[1em]
+1 for common official of primary language&                  &                  &       0.673{$^a$}&       0.571{$^a$}\\
+                    &                  &                  &     (0.035)      &     (0.033)      \\
+[1em]
+1 for pairs ever in colonial relationship&                  &                  &       1.334{$^a$}&       1.231{$^a$}\\
+                    &                  &                  &     (0.084)      &     (0.074)      \\
+\hline
+Observations        &      102018      &      101343      &      101343      &      101343      \\
+\(R^{2}\)           &       0.578      &       0.581      &       0.596      &       0.697      \\
+\hline\hline
+\multicolumn{5}{l}{\footnotesize Standard errors in parentheses}\\
+\multicolumn{5}{l}{\footnotesize {$^c$} p<0.1, {$^b$} p<0.05, {$^a$} p<0.01}\\
+\end{tabular}
+}
+
+. eststo clear
+
+. 
+end of do-file
+
+. do "C:\Users\HP\AppData\Local\Temp\STD6a9c_000000.tmp"
+
+. **************
+. * Estimating the baseline gravity specification of Rose for each year adding importer    and export fixed effects *
+. **************
+. 
+. forvalues x=1960(5)2005{
+  2.         use working_sample1, clear
+  3.         keep if year == `x'
+  4.         eststo: reghdfe ltrade comcur ldist rta contig comlang_off colony, a(exp imp) vce(cluster dyad)
+  5. }
+(324,990 observations deleted)
+(dropped 8 singleton observations)
+(MWFE estimator converged in 7 iterations)
+
+HDFE Linear regression                            Number of obs   =      5,002
+Absorbing 2 HDFE groups                           F(   6,   4704) =     207.78
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.6854
+                                                  Adj R-squared   =     0.6655
+                                                  Within R-sq.    =     0.2305
+Number of clusters (dyad)    =      5,002         Root MSE        =     1.2267
+
+                               (Std. err. adjusted for 5,002 clusters in dyad)
+------------------------------------------------------------------------------
+             |               Robust
+      ltrade | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      comcur |   .6072388   .1159081     5.24   0.000     .3800046    .8344729
+       ldist |  -.6939803   .0299901   -23.14   0.000    -.7527749   -.6351858
+         rta |   .1720354   .1158191     1.49   0.138    -.0550244    .3990951
+      contig |   .1956545   .1065698     1.84   0.066    -.0132722    .4045812
+ comlang_off |   .2919575    .060642     4.81   0.000     .1730707    .4108443
+      colony |   1.231042   .1056614    11.65   0.000     1.023896    1.438188
+       _cons |   20.24183   .2600132    77.85   0.000     19.73208    20.75158
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-----------------------------------------------------+
+ Absorbed FE | Categories  - Redundant  = Num. Coefs |
+-------------+---------------------------------------|
+         exp |       147           0         147     |
+         imp |       146           1         145     |
+-----------------------------------------------------+
+(est1 stored)
+(324,990 observations deleted)
+(dropped 2 singleton observations)
+(MWFE estimator converged in 7 iterations)
+
+HDFE Linear regression                            Number of obs   =      6,343
+Absorbing 2 HDFE groups                           F(   6,   6029) =     325.90
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.7046
+                                                  Adj R-squared   =     0.6893
+                                                  Within R-sq.    =     0.2680
+Number of clusters (dyad)    =      6,343         Root MSE        =     1.2214
+
+                               (Std. err. adjusted for 6,343 clusters in dyad)
+------------------------------------------------------------------------------
+             |               Robust
+      ltrade | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      comcur |   .7323429   .0957938     7.64   0.000     .5445527     .920133
+       ldist |  -.7531745   .0271678   -27.72   0.000    -.8064331   -.6999159
+         rta |    .608324   .1118753     5.44   0.000     .3890083    .8276396
+      contig |   .1530107    .098385     1.56   0.120     -.039859    .3458804
+ comlang_off |   .3675434   .0524201     7.01   0.000     .2647814    .4703055
+      colony |   1.230981   .0919868    13.38   0.000     1.050654    1.411308
+       _cons |    20.7496   .2353557    88.16   0.000     20.28822    21.21098
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-----------------------------------------------------+
+ Absorbed FE | Categories  - Redundant  = Num. Coefs |
+-------------+---------------------------------------|
+         exp |       155           0         155     |
+         imp |       154           1         153     |
+-----------------------------------------------------+
+(est2 stored)
+(324,990 observations deleted)
+(dropped 5 singleton observations)
+(MWFE estimator converged in 7 iterations)
+
+HDFE Linear regression                            Number of obs   =      8,170
+Absorbing 2 HDFE groups                           F(   6,   7834) =     397.09
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.7113
+                                                  Adj R-squared   =     0.6989
+                                                  Within R-sq.    =     0.2526
+Number of clusters (dyad)    =      8,170         Root MSE        =     1.4799
+
+                               (Std. err. adjusted for 8,170 clusters in dyad)
+------------------------------------------------------------------------------
+             |               Robust
+      ltrade | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      comcur |   1.441922   .1336486    10.79   0.000     1.179935    1.703909
+       ldist |  -.8722521   .0274861   -31.73   0.000    -.9261323   -.8183719
+         rta |    .771992   .1513863     5.10   0.000     .4752346     1.06875
+      contig |   .1550122   .1156227     1.34   0.180    -.0716392    .3816636
+ comlang_off |    .464553   .0560386     8.29   0.000     .3547024    .5744035
+      colony |   1.351602   .0952502    14.19   0.000     1.164886    1.538318
+       _cons |   21.38498   .2390898    89.44   0.000      20.9163    21.85366
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-----------------------------------------------------+
+ Absorbed FE | Categories  - Redundant  = Num. Coefs |
+-------------+---------------------------------------|
+         exp |       164           0         164     |
+         imp |       167           1         166     |
+-----------------------------------------------------+
+(est3 stored)
+(324,990 observations deleted)
+(dropped 2 singleton observations)
+(MWFE estimator converged in 7 iterations)
+
+HDFE Linear regression                            Number of obs   =      9,648
+Absorbing 2 HDFE groups                           F(   6,   9305) =     455.54
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.7026
+                                                  Adj R-squared   =     0.6916
+                                                  Within R-sq.    =     0.2397
+Number of clusters (dyad)    =      9,648         Root MSE        =     1.6013
+
+                               (Std. err. adjusted for 9,648 clusters in dyad)
+------------------------------------------------------------------------------
+             |               Robust
+      ltrade | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      comcur |   1.180688    .145001     8.14   0.000     .8964545    1.464922
+       ldist |  -1.024468   .0277458   -36.92   0.000    -1.078855   -.9700798
+         rta |  -.0836424   .1166156    -0.72   0.473    -.3122345    .1449497
+      contig |   .1632247    .114532     1.43   0.154    -.0612831    .3877326
+ comlang_off |   .4153129   .0553983     7.50   0.000     .3067201    .5239058
+      colony |    1.29408   .0928279    13.94   0.000     1.112117    1.476043
+       _cons |   23.38217   .2415283    96.81   0.000     22.90872    23.85562
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-----------------------------------------------------+
+ Absorbed FE | Categories  - Redundant  = Num. Coefs |
+-------------+---------------------------------------|
+         exp |       169           0         169     |
+         imp |       169           1         168     |
+-----------------------------------------------------+
+(est4 stored)
+(324,990 observations deleted)
+(MWFE estimator converged in 7 iterations)
+
+HDFE Linear regression                            Number of obs   =     10,520
+Absorbing 2 HDFE groups                           F(   6,  10165) =     505.05
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.7002
+                                                  Adj R-squared   =     0.6898
+                                                  Within R-sq.    =     0.2449
+Number of clusters (dyad)    =     10,520         Root MSE        =     1.7170
+
+                              (Std. err. adjusted for 10,520 clusters in dyad)
+------------------------------------------------------------------------------
+             |               Robust
+      ltrade | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      comcur |   .8643843   .1655832     5.22   0.000     .5398085     1.18896
+       ldist |  -1.162251   .0283347   -41.02   0.000    -1.217792   -1.106709
+         rta |   .0737538   .1147733     0.64   0.520    -.1512246    .2987321
+      contig |   .1150646    .118684     0.97   0.332    -.1175794    .3477087
+ comlang_off |   .3328416   .0583854     5.70   0.000     .2183948    .4472885
+      colony |    1.45295   .0933273    15.57   0.000      1.27001     1.63589
+       _cons |     25.049   .2468618   101.47   0.000      24.5651     25.5329
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-----------------------------------------------------+
+ Absorbed FE | Categories  - Redundant  = Num. Coefs |
+-------------+---------------------------------------|
+         exp |       175           0         175     |
+         imp |       175           1         174     |
+-----------------------------------------------------+
+(est5 stored)
+(324,990 observations deleted)
+(dropped 1 singleton observations)
+(MWFE estimator converged in 7 iterations)
+
+HDFE Linear regression                            Number of obs   =     10,840
+Absorbing 2 HDFE groups                           F(   6,  10484) =     582.60
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.7125
+                                                  Adj R-squared   =     0.7027
+                                                  Within R-sq.    =     0.2711
+Number of clusters (dyad)    =     10,840         Root MSE        =     1.6705
+
+                              (Std. err. adjusted for 10,840 clusters in dyad)
+------------------------------------------------------------------------------
+             |               Robust
+      ltrade | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      comcur |   1.023319   .1496821     6.84   0.000      .729914    1.316725
+       ldist |  -1.186289   .0280866   -42.24   0.000    -1.241344   -1.131234
+         rta |   .1293161   .1017064     1.27   0.204    -.0700478    .3286799
+      contig |   .0312565   .1066194     0.29   0.769    -.1777377    .2402508
+ comlang_off |     .47848   .0547923     8.73   0.000     .3710767    .5858832
+      colony |   1.229967   .0902789    13.62   0.000     1.053003    1.406931
+       _cons |   25.07182   .2454182   102.16   0.000     24.59075    25.55289
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-----------------------------------------------------+
+ Absorbed FE | Categories  - Redundant  = Num. Coefs |
+-------------+---------------------------------------|
+         exp |       176           0         176     |
+         imp |       175           1         174     |
+-----------------------------------------------------+
+(est6 stored)
+(324,990 observations deleted)
+(MWFE estimator converged in 6 iterations)
+
+HDFE Linear regression                            Number of obs   =     12,901
+Absorbing 2 HDFE groups                           F(   6,  12540) =     812.32
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.7233
+                                                  Adj R-squared   =     0.7154
+                                                  Within R-sq.    =     0.2937
+Number of clusters (dyad)    =     12,901         Root MSE        =     1.7092
+
+                              (Std. err. adjusted for 12,901 clusters in dyad)
+------------------------------------------------------------------------------
+             |               Robust
+      ltrade | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      comcur |   1.284996   .1643437     7.82   0.000      .962857    1.607135
+       ldist |  -1.256849   .0261337   -48.09   0.000    -1.308075   -1.205623
+         rta |   .2641751   .0916259     2.88   0.004     .0845743    .4437759
+      contig |   .3190765    .106462     3.00   0.003     .1103947    .5277583
+ comlang_off |   .5221477   .0511414    10.21   0.000     .4219028    .6223925
+      colony |   1.261461   .0878035    14.37   0.000     1.089353     1.43357
+       _cons |   25.77477   .2295391   112.29   0.000     25.32484     26.2247
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-----------------------------------------------------+
+ Absorbed FE | Categories  - Redundant  = Num. Coefs |
+-------------+---------------------------------------|
+         exp |       178           0         178     |
+         imp |       178           1         177     |
+-----------------------------------------------------+
+(est7 stored)
+(324,990 observations deleted)
+(dropped 1 singleton observations)
+(MWFE estimator converged in 6 iterations)
+
+HDFE Linear regression                            Number of obs   =     17,548
+Absorbing 2 HDFE groups                           F(   6,  17142) =    1175.94
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.7293
+                                                  Adj R-squared   =     0.7229
+                                                  Within R-sq.    =     0.3066
+Number of clusters (dyad)    =     17,548         Root MSE        =     1.7169
+
+                              (Std. err. adjusted for 17,548 clusters in dyad)
+------------------------------------------------------------------------------
+             |               Robust
+      ltrade | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      comcur |   .8812294   .1609768     5.47   0.000     .5656984     1.19676
+       ldist |  -1.230874   .0226277   -54.40   0.000    -1.275227   -1.186521
+         rta |   .5603883   .0643148     8.71   0.000     .4343247    .6864518
+      contig |   .7302712   .0952494     7.67   0.000     .5435727    .9169698
+ comlang_off |   .6001106   .0458843    13.08   0.000     .5101727    .6900486
+      colony |   1.294302    .080297    16.12   0.000     1.136912    1.451692
+       _cons |   25.30621   .1980148   127.80   0.000     24.91808    25.69434
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-----------------------------------------------------+
+ Absorbed FE | Categories  - Redundant  = Num. Coefs |
+-------------+---------------------------------------|
+         exp |       200           0         200     |
+         imp |       201           1         200     |
+-----------------------------------------------------+
+(est8 stored)
+(324,990 observations deleted)
+(MWFE estimator converged in 6 iterations)
+
+HDFE Linear regression                            Number of obs   =     18,996
+Absorbing 2 HDFE groups                           F(   6,  18599) =    1384.52
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.7327
+                                                  Adj R-squared   =     0.7270
+                                                  Within R-sq.    =     0.3240
+Number of clusters (dyad)    =     18,996         Root MSE        =     1.7264
+
+                              (Std. err. adjusted for 18,996 clusters in dyad)
+------------------------------------------------------------------------------
+             |               Robust
+      ltrade | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      comcur |   -.018082   .1168333    -0.15   0.877     -.247086     .210922
+       ldist |  -1.302958   .0220395   -59.12   0.000    -1.346158   -1.259759
+         rta |   .7045738   .0583838    12.07   0.000     .5901362    .8190114
+      contig |   .6852204   .0907349     7.55   0.000     .5073716    .8630691
+ comlang_off |   .6364483   .0440342    14.45   0.000     .5501373    .7227593
+      colony |   1.210204   .0868031    13.94   0.000     1.040062    1.380346
+       _cons |   25.83701   .1931804   133.75   0.000     25.45836    26.21567
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-----------------------------------------------------+
+ Absorbed FE | Categories  - Redundant  = Num. Coefs |
+-------------+---------------------------------------|
+         exp |       196           0         196     |
+         imp |       196           1         195     |
+-----------------------------------------------------+
+(est9 stored)
+(324,990 observations deleted)
+(MWFE estimator converged in 6 iterations)
+
+HDFE Linear regression                            Number of obs   =     20,142
+Absorbing 2 HDFE groups                           F(   6,  19745) =    1536.71
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.7382
+                                                  Adj R-squared   =     0.7329
+                                                  Within R-sq.    =     0.3339
+Number of clusters (dyad)    =     20,142         Root MSE        =     1.7742
+
+                              (Std. err. adjusted for 20,142 clusters in dyad)
+------------------------------------------------------------------------------
+             |               Robust
+      ltrade | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      comcur |   .2026251   .1127202     1.80   0.072    -.0183159    .4235661
+       ldist |  -1.354175   .0244909   -55.29   0.000     -1.40218   -1.306171
+         rta |   .6031679   .0501302    12.03   0.000     .5049085    .7014273
+      contig |     .73133   .0935241     7.82   0.000     .5480149    .9146452
+ comlang_off |   .7006901   .0439041    15.96   0.000     .6146344    .7867457
+      colony |   1.045245   .0878933    11.89   0.000     .8729666    1.217523
+       _cons |   26.65429   .2161445   123.32   0.000     26.23063    27.07795
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-----------------------------------------------------+
+ Absorbed FE | Categories  - Redundant  = Num. Coefs |
+-------------+---------------------------------------|
+         exp |       196           0         196     |
+         imp |       196           1         195     |
+-----------------------------------------------------+
+(est10 stored)
+
+. *
+. set linesize 250
+
+. esttab, mtitles drop() b(%5.3f) se(%5.3f) compress r2 starlevels(c 0.1 b 0.05 a 0.01)  se 
+
+------------------------------------------------------------------------------------------------------------------------
+                 (1)        (2)        (3)        (4)        (5)        (6)        (7)        (8)        (9)       (10) 
+                est1       est2       est3       est4       est5       est6       est7       est8       est9      est10 
+------------------------------------------------------------------------------------------------------------------------
+comcur         0.607a     0.732a     1.442a     1.181a     0.864a     1.023a     1.285a     0.881a    -0.018      0.203c
+             (0.116)    (0.096)    (0.134)    (0.145)    (0.166)    (0.150)    (0.164)    (0.161)    (0.117)    (0.113) 
+
+ldist         -0.694a    -0.753a    -0.872a    -1.024a    -1.162a    -1.186a    -1.257a    -1.231a    -1.303a    -1.354a
+             (0.030)    (0.027)    (0.027)    (0.028)    (0.028)    (0.028)    (0.026)    (0.023)    (0.022)    (0.024) 
+
+rta            0.172      0.608a     0.772a    -0.084      0.074      0.129      0.264a     0.560a     0.705a     0.603a
+             (0.116)    (0.112)    (0.151)    (0.117)    (0.115)    (0.102)    (0.092)    (0.064)    (0.058)    (0.050) 
+
+contig         0.196c     0.153      0.155      0.163      0.115      0.031      0.319a     0.730a     0.685a     0.731a
+             (0.107)    (0.098)    (0.116)    (0.115)    (0.119)    (0.107)    (0.106)    (0.095)    (0.091)    (0.094) 
+
+comlang_~f     0.292a     0.368a     0.465a     0.415a     0.333a     0.478a     0.522a     0.600a     0.636a     0.701a
+             (0.061)    (0.052)    (0.056)    (0.055)    (0.058)    (0.055)    (0.051)    (0.046)    (0.044)    (0.044) 
+
+colony         1.231a     1.231a     1.352a     1.294a     1.453a     1.230a     1.261a     1.294a     1.210a     1.045a
+             (0.106)    (0.092)    (0.095)    (0.093)    (0.093)    (0.090)    (0.088)    (0.080)    (0.087)    (0.088) 
+
+_cons         20.242a    20.750a    21.385a    23.382a    25.049a    25.072a    25.775a    25.306a    25.837a    26.654a
+             (0.260)    (0.235)    (0.239)    (0.242)    (0.247)    (0.245)    (0.230)    (0.198)    (0.193)    (0.216) 
+------------------------------------------------------------------------------------------------------------------------
+N               5002       6343       8170       9648      10520      10840      12901      17548      18996      20142 
+R-sq           0.685      0.705      0.711      0.703      0.700      0.712      0.723      0.729      0.733      0.738 
+------------------------------------------------------------------------------------------------------------------------
+Standard errors in parentheses
+c p<0.1, b p<0.05, a p<0.01
+
+. esttab, mtitles drop() b(%5.3f) se(%5.3f) r2  starlevels({$^c$} 0.1 {$^b$} 0.05 {$^a$} 0.01) se tex label title()  
+
+{
+\def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
+\begin{tabular}{l*{10}{c}}
+\hline\hline
+                    &\multicolumn{1}{c}{(1)}&\multicolumn{1}{c}{(2)}&\multicolumn{1}{c}{(3)}&\multicolumn{1}{c}{(4)}&\multicolumn{1}{c}{(5)}&\multicolumn{1}{c}{(6)}&\multicolumn{1}{c}{(7)}&\multicolumn{1}{c}{(8)}&\multicolumn{1}{c}{(9)}&\multicolumn{
+> 1}{c}{(10)}\\
+                    &\multicolumn{1}{c}{est1}&\multicolumn{1}{c}{est2}&\multicolumn{1}{c}{est3}&\multicolumn{1}{c}{est4}&\multicolumn{1}{c}{est5}&\multicolumn{1}{c}{est6}&\multicolumn{1}{c}{est7}&\multicolumn{1}{c}{est8}&\multicolumn{1}{c}{est9}&\mul
+> ticolumn{1}{c}{est10}\\
+\hline
+=1 if iso\_o and iso\_d use a common currency at year t&       0.607{$^a$}&       0.732{$^a$}&       1.442{$^a$}&       1.181{$^a$}&       0.864{$^a$}&       1.023{$^a$}&       1.285{$^a$}&       0.881{$^a$}&      -0.018      &       0.203{$^c$}\\
+                    &     (0.116)      &     (0.096)      &     (0.134)      &     (0.145)      &     (0.166)      &     (0.150)      &     (0.164)      &     (0.161)      &     (0.117)      &     (0.113)      \\
+[1em]
+ldist               &      -0.694{$^a$}&      -0.753{$^a$}&      -0.872{$^a$}&      -1.024{$^a$}&      -1.162{$^a$}&      -1.186{$^a$}&      -1.257{$^a$}&      -1.231{$^a$}&      -1.303{$^a$}&      -1.354{$^a$}\\
+                    &     (0.030)      &     (0.027)      &     (0.027)      &     (0.028)      &     (0.028)      &     (0.028)      &     (0.026)      &     (0.023)      &     (0.022)      &     (0.024)      \\
+[1em]
+=1 for regional trade agreement in force&       0.172      &       0.608{$^a$}&       0.772{$^a$}&      -0.084      &       0.074      &       0.129      &       0.264{$^a$}&       0.560{$^a$}&       0.705{$^a$}&       0.603{$^a$}\\
+                    &     (0.116)      &     (0.112)      &     (0.151)      &     (0.117)      &     (0.115)      &     (0.102)      &     (0.092)      &     (0.064)      &     (0.058)      &     (0.050)      \\
+[1em]
+1 for contiguity    &       0.196{$^c$}&       0.153      &       0.155      &       0.163      &       0.115      &       0.031      &       0.319{$^a$}&       0.730{$^a$}&       0.685{$^a$}&       0.731{$^a$}\\
+                    &     (0.107)      &     (0.098)      &     (0.116)      &     (0.115)      &     (0.119)      &     (0.107)      &     (0.106)      &     (0.095)      &     (0.091)      &     (0.094)      \\
+[1em]
+1 for common official of primary language&       0.292{$^a$}&       0.368{$^a$}&       0.465{$^a$}&       0.415{$^a$}&       0.333{$^a$}&       0.478{$^a$}&       0.522{$^a$}&       0.600{$^a$}&       0.636{$^a$}&       0.701{$^a$}\\
+                    &     (0.061)      &     (0.052)      &     (0.056)      &     (0.055)      &     (0.058)      &     (0.055)      &     (0.051)      &     (0.046)      &     (0.044)      &     (0.044)      \\
+[1em]
+1 for pairs ever in colonial relationship&       1.231{$^a$}&       1.231{$^a$}&       1.352{$^a$}&       1.294{$^a$}&       1.453{$^a$}&       1.230{$^a$}&       1.261{$^a$}&       1.294{$^a$}&       1.210{$^a$}&       1.045{$^a$}\\
+                    &     (0.106)      &     (0.092)      &     (0.095)      &     (0.093)      &     (0.093)      &     (0.090)      &     (0.088)      &     (0.080)      &     (0.087)      &     (0.088)      \\
+[1em]
+Constant            &      20.242{$^a$}&      20.750{$^a$}&      21.385{$^a$}&      23.382{$^a$}&      25.049{$^a$}&      25.072{$^a$}&      25.775{$^a$}&      25.306{$^a$}&      25.837{$^a$}&      26.654{$^a$}\\
+                    &     (0.260)      &     (0.235)      &     (0.239)      &     (0.242)      &     (0.247)      &     (0.245)      &     (0.230)      &     (0.198)      &     (0.193)      &     (0.216)      \\
+\hline
+Observations        &        5002      &        6343      &        8170      &        9648      &       10520      &       10840      &       12901      &       17548      &       18996      &       20142      \\
+\(R^{2}\)           &       0.685      &       0.705      &       0.711      &       0.703      &       0.700      &       0.712      &       0.723      &       0.729      &       0.733      &       0.738      \\
+\hline\hline
+\multicolumn{11}{l}{\footnotesize Standard errors in parentheses}\\
+\multicolumn{11}{l}{\footnotesize {$^c$} p<0.1, {$^b$} p<0.05, {$^a$} p<0.01}\\
+\end{tabular}
+}
+
+. eststo clear
+
+. 
+end of do-file
+
+. do "C:\Users\HP\AppData\Local\Temp\STD6a9c_000000.tmp"
+
+. **************
+. * estimate the baseline gravity equation adding country-pair fixed effects *
+. **************
+. 
+. use working_sample1, clear
+
+. tsset dyad year
+
+Panel variable: dyad (strongly balanced)
+ Time variable: year, 1960 to 2005, but with gaps
+         Delta: 1 unit
+
+. eststo: xtreg ltrade comcur lgdp_o lgdp_d rta yeard*,  fe cluster(dyad)
+note: yeard10 omitted because of collinearity.
+
+Fixed-effects (within) regression               Number of obs     =    101,343
+Group variable: dyad                            Number of groups  =     21,994
+
+R-squared:                                      Obs per group:
+     Within  = 0.4131                                         min =          1
+     Between = 0.4863                                         avg =        4.6
+     Overall = 0.4944                                         max =         10
+
+                                                F(13, 21993)      =    2096.05
+corr(u_i, Xb) = -0.2780                         Prob > F          =     0.0000
+
+                              (Std. err. adjusted for 21,994 clusters in dyad)
+------------------------------------------------------------------------------
+             |               Robust
+      ltrade | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      comcur |      .6635   .0709801     9.35   0.000     .5243738    .8026261
+      lgdp_o |   1.143886   .0303179    37.73   0.000      1.08446    1.203311
+      lgdp_d |   .9592147   .0288009    33.30   0.000     .9027628    1.015667
+         rta |   .5373172   .0285734    18.80   0.000     .4813114     .593323
+      yeard1 |   3.456403   .1431138    24.15   0.000      3.17589    3.736917
+      yeard2 |   3.176258   .1291264    24.60   0.000     2.923161    3.429356
+      yeard3 |   2.568998   .1111881    23.10   0.000     2.351061    2.786935
+      yeard4 |   2.321377   .0895822    25.91   0.000     2.145789    2.496964
+      yeard5 |   1.715833   .0666888    25.73   0.000     1.585118    1.846548
+      yeard6 |   .9096255   .0525063    17.32   0.000     .8067095    1.012542
+      yeard7 |   .7191477   .0396254    18.15   0.000      .641479    .7968163
+      yeard8 |   .5162844    .028917    17.85   0.000     .4596049    .5729639
+      yeard9 |   .1562994   .0191599     8.16   0.000     .1187447    .1938542
+     yeard10 |          0  (omitted)
+       _cons |  -22.56347   .7652801   -29.48   0.000    -24.06348   -21.06347
+-------------+----------------------------------------------------------------
+     sigma_u |  2.1681073
+     sigma_e |  1.2773807
+         rho |  .74232458   (fraction of variance due to u_i)
+------------------------------------------------------------------------------
+(est1 stored)
+
+. *
+. set linesize 250
+
+. esttab, mtitles drop(yeard*) b(%5.3f) se(%5.3f) compress r2 starlevels(c 0.1 b 0.05 a 0.01)  se 
+
+---------------------
+                 (1) 
+                est1 
+---------------------
+comcur         0.663a
+             (0.071) 
+
+lgdp_o         1.144a
+             (0.030) 
+
+lgdp_d         0.959a
+             (0.029) 
+
+rta            0.537a
+             (0.029) 
+
+_cons        -22.563a
+             (0.765) 
+---------------------
+N             101343 
+R-sq           0.413 
+---------------------
+Standard errors in parentheses
+c p<0.1, b p<0.05, a p<0.01
+
+. esttab, mtitles drop(yeard*) b(%5.3f) se(%5.3f) r2  starlevels({$^c$} 0.1 {$^b$} 0.05 {$^a$} 0.01) se tex label  title() 
+
+{
+\def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
+\begin{tabular}{l*{1}{c}}
+\hline\hline
+                    &\multicolumn{1}{c}{(1)}\\
+                    &\multicolumn{1}{c}{est1}\\
+\hline
+=1 if iso\_o and iso\_d use a common currency at year t&       0.663{$^a$}\\
+                    &     (0.071)      \\
+[1em]
+lgdp\_o              &       1.144{$^a$}\\
+                    &     (0.030)      \\
+[1em]
+lgdp\_d              &       0.959{$^a$}\\
+                    &     (0.029)      \\
+[1em]
+=1 for regional trade agreement in force&       0.537{$^a$}\\
+                    &     (0.029)      \\
+[1em]
+Constant            &     -22.563{$^a$}\\
+                    &     (0.765)      \\
+\hline
+Observations        &      101343      \\
+\(R^{2}\)           &       0.413      \\
+\hline\hline
+\multicolumn{2}{l}{\footnotesize Standard errors in parentheses}\\
+\multicolumn{2}{l}{\footnotesize {$^c$} p<0.1, {$^b$} p<0.05, {$^a$} p<0.01}\\
+\end{tabular}
+}
+
+. eststo clear
+
+. 
+end of do-file
+
+. do "C:\Users\HP\AppData\Local\Temp\STD6a9c_000000.tmp"
+
+. ***************
+. * Using reghdfe to run regressions controlling for importer*year FE and exporter*year FE *
+. ***************
+. 
+. use working_sample1, clear
+
+. eststo: reghdfe ltrade comcur ldist rta contig comlang_off colony, a(it jt) vce(cluster dyad)  
+(dropped 19 singleton observations)
+(MWFE estimator converged in 8 iterations)
+
+HDFE Linear regression                            Number of obs   =    120,110
+Absorbing 2 HDFE groups                           F(   6,  25380) =    1646.87
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.7219
+                                                  Adj R-squared   =     0.7135
+                                                  Within R-sq.    =     0.2864
+Number of clusters (dyad)    =     25,381         Root MSE        =     1.6699
+
+                              (Std. err. adjusted for 25,381 clusters in dyad)
+------------------------------------------------------------------------------
+             |               Robust
+      ltrade | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      comcur |   .7326976   .0739002     9.91   0.000      .587849    .8775462
+       ldist |  -1.151178    .016102   -71.49   0.000    -1.182738   -1.119617
+         rta |   .6788206   .0425174    15.97   0.000     .5954841    .7621571
+      contig |   .3236275   .0717804     4.51   0.000     .1829338    .4643212
+ comlang_off |    .520613   .0302138    17.23   0.000     .4613921    .5798339
+      colony |   1.301804   .0666945    19.52   0.000     1.171079    1.432529
+       _cons |   24.59919   .1414617   173.89   0.000     24.32192    24.87647
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-----------------------------------------------------+
+ Absorbed FE | Categories  - Redundant  = Num. Coefs |
+-------------+---------------------------------------|
+          it |      1756           0        1756     |
+          jt |      1757          10        1747     |
+-----------------------------------------------------+
+(est1 stored)
+
+. ***************
+. * Using reghdfe to run regressions controlling for importer*year FE and exporter*year FE and dyadic FE *
+. ***************
+. eststo: reghdfe ltrade comcur rta, a(it jt dyad) vce(cluster dyad)
+(dropped 4450 singleton observations)
+(MWFE estimator converged in 13 iterations)
+
+HDFE Linear regression                            Number of obs   =    115,679
+Absorbing 3 HDFE groups                           F(   2,  20950) =     130.92
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.8817
+                                                  Adj R-squared   =     0.8500
+                                                  Within R-sq.    =     0.0033
+Number of clusters (dyad)    =     20,951         Root MSE        =     1.1905
+
+                              (Std. err. adjusted for 20,951 clusters in dyad)
+------------------------------------------------------------------------------
+             |               Robust
+      ltrade | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      comcur |   .3083173   .0621027     4.96   0.000     .1865912    .4300434
+         rta |   .4552939   .0298736    15.24   0.000     .3967393    .5138485
+       _cons |    15.0257   .0019561  7681.57   0.000     15.02187    15.02954
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-----------------------------------------------------+
+ Absorbed FE | Categories  - Redundant  = Num. Coefs |
+-------------+---------------------------------------|
+          it |      1756           1        1755     |
+          jt |      1756          10        1746     |
+        dyad |     20951       20951           0    *|
+-----------------------------------------------------+
+* = FE nested within cluster; treated as redundant for DoF computation
+(est2 stored)
+
+. *
+. set linesize 250
+
+. esttab, mtitles drop() b(%5.3f) se(%5.3f) compress r2 starlevels(c 0.1 b 0.05 a 0.01)  se 
+
+--------------------------------
+                 (1)        (2) 
+                est1       est2 
+--------------------------------
+comcur         0.733a     0.308a
+             (0.074)    (0.062) 
+
+ldist         -1.151a           
+             (0.016)            
+
+rta            0.679a     0.455a
+             (0.043)    (0.030) 
+
+contig         0.324a           
+             (0.072)            
+
+comlang_~f     0.521a           
+             (0.030)            
+
+colony         1.302a           
+             (0.067)            
+
+_cons         24.599a    15.026a
+             (0.141)    (0.002) 
+--------------------------------
+N             120110     115679 
+R-sq           0.722      0.882 
+--------------------------------
+Standard errors in parentheses
+c p<0.1, b p<0.05, a p<0.01
+
+. esttab, mtitles drop() b(%5.3f) se(%5.3f) r2  starlevels({$^c$} 0.1 {$^b$} 0.05 {$^a$} 0.01) se tex label title() 
+
+{
+\def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
+\begin{tabular}{l*{2}{c}}
+\hline\hline
+                    &\multicolumn{1}{c}{(1)}&\multicolumn{1}{c}{(2)}\\
+                    &\multicolumn{1}{c}{est1}&\multicolumn{1}{c}{est2}\\
+\hline
+=1 if iso\_o and iso\_d use a common currency at year t&       0.733{$^a$}&       0.308{$^a$}\\
+                    &     (0.074)      &     (0.062)      \\
+[1em]
+ldist               &      -1.151{$^a$}&                  \\
+                    &     (0.016)      &                  \\
+[1em]
+=1 for regional trade agreement in force&       0.679{$^a$}&       0.455{$^a$}\\
+                    &     (0.043)      &     (0.030)      \\
+[1em]
+1 for contiguity    &       0.324{$^a$}&                  \\
+                    &     (0.072)      &                  \\
+[1em]
+1 for common official of primary language&       0.521{$^a$}&                  \\
+                    &     (0.030)      &                  \\
+[1em]
+1 for pairs ever in colonial relationship&       1.302{$^a$}&                  \\
+                    &     (0.067)      &                  \\
+[1em]
+Constant            &      24.599{$^a$}&      15.026{$^a$}\\
+                    &     (0.141)      &     (0.002)      \\
+\hline
+Observations        &      120110      &      115679      \\
+\(R^{2}\)           &       0.722      &       0.882      \\
+\hline\hline
+\multicolumn{3}{l}{\footnotesize Standard errors in parentheses}\\
+\multicolumn{3}{l}{\footnotesize {$^c$} p<0.1, {$^b$} p<0.05, {$^a$} p<0.01}\\
+\end{tabular}
+}
+
+. eststo clear
+
+. 
+end of do-file
+
+. do "C:\Users\HP\AppData\Local\Temp\STD6a9c_000000.tmp"
+
+. ***************
+. * checking if small countries benefit more *
+. ***************
+. 
+. use working_sample1, clear
+
+. *
+. g comcur_gdpo = comcur*lgdp_o
+(86,330 missing values generated)
+
+. g comcur_gdpd = comcur*lgdp_d
+(86,330 missing values generated)
+
+. *
+. eststo: xtreg ltrade comcur lgdp_o lgdp_d comcur_gdpo comcur_gdpd rta yeard*,  fe cluster(dyad)
+note: yeard10 omitted because of collinearity.
+
+Fixed-effects (within) regression               Number of obs     =    101,343
+Group variable: dyad                            Number of groups  =     21,994
+
+R-squared:                                      Obs per group:
+     Within  = 0.4133                                         min =          1
+     Between = 0.4869                                         avg =        4.6
+     Overall = 0.4950                                         max =         10
+
+                                                F(15, 21993)      =    1814.03
+corr(u_i, Xb) = -0.2740                         Prob > F          =     0.0000
+
+                              (Std. err. adjusted for 21,994 clusters in dyad)
+------------------------------------------------------------------------------
+             |               Robust
+      ltrade | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      comcur |   2.050257   .4065145     5.04   0.000      1.25346    2.847055
+      lgdp_o |   1.143469   .0303093    37.73   0.000      1.08406    1.202877
+      lgdp_d |     .95726    .028801    33.24   0.000     .9008081    1.013712
+ comcur_gdpo |  -.1099289   .0258321    -4.26   0.000    -.1605618   -.0592961
+ comcur_gdpd |   .0265054    .022977     1.15   0.249    -.0185312     .071542
+         rta |   .5470772   .0285443    19.17   0.000     .4911283    .6030261
+      yeard1 |   3.441783   .1431257    24.05   0.000     3.161247     3.72232
+      yeard2 |   3.161149   .1291634    24.47   0.000     2.907979    3.414319
+      yeard3 |   2.557285   .1111832    23.00   0.000     2.339358    2.775212
+      yeard4 |   2.312629   .0895773    25.82   0.000     2.137051    2.488206
+      yeard5 |   1.709579    .066692    25.63   0.000     1.578858      1.8403
+      yeard6 |   .9046426   .0525074    17.23   0.000     .8017244    1.007561
+      yeard7 |   .7153389   .0396306    18.05   0.000     .6376601    .7930177
+      yeard8 |   .5133064   .0289209    17.75   0.000     .4566193    .5699935
+      yeard9 |   .1554377   .0191553     8.11   0.000      .117892    .1929834
+     yeard10 |          0  (omitted)
+       _cons |  -22.51999   .7648127   -29.45   0.000    -24.01908    -21.0209
+-------------+----------------------------------------------------------------
+     sigma_u |  2.1646623
+     sigma_e |  1.2772153
+         rho |  .74176539   (fraction of variance due to u_i)
+------------------------------------------------------------------------------
+(est1 stored)
+
+. *
+. eststo: reghdfe ltrade comcur comcur_gdpo comcur_gdpd  ldist rta contig comlang_off colony,  a(it jt) vce(cluster dyad)  
+(dropped 16 singleton observations)
+(MWFE estimator converged in 8 iterations)
+
+HDFE Linear regression                            Number of obs   =    101,327
+Absorbing 2 HDFE groups                           F(   8,  21992) =    1211.48
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.7282
+                                                  Adj R-squared   =     0.7200
+                                                  Within R-sq.    =     0.3027
+Number of clusters (dyad)    =     21,993         Root MSE        =     1.6527
+
+                              (Std. err. adjusted for 21,993 clusters in dyad)
+------------------------------------------------------------------------------
+             |               Robust
+      ltrade | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      comcur |   4.117768   .3916797    10.51   0.000     3.350047    4.885488
+ comcur_gdpo |  -.0060678   .0284701    -0.21   0.831    -.0618713    .0497357
+ comcur_gdpd |  -.2171192   .0298034    -7.29   0.000     -.275536   -.1587025
+       ldist |  -1.172398   .0180529   -64.94   0.000    -1.207783   -1.137013
+         rta |   .6988718   .0440499    15.87   0.000     .6125308    .7852129
+      contig |   .5055627   .0760847     6.64   0.000     .3564313    .6546941
+ comlang_off |   .5529815    .032332    17.10   0.000     .4896085    .6163545
+      colony |   1.240074   .0712793    17.40   0.000     1.100362    1.379787
+       _cons |   24.83004   .1590269   156.14   0.000     24.51833    25.14174
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-----------------------------------------------------+
+ Absorbed FE | Categories  - Redundant  = Num. Coefs |
+-------------+---------------------------------------|
+          it |      1485           0        1485     |
+          jt |      1490          10        1480     |
+-----------------------------------------------------+
+(est2 stored)
+
+. *
+. eststo: reghdfe ltrade comcur comcur_gdpo comcur_gdpd  rta, a(it jt dyad) vce(cluster dyad)
+(dropped 3640 singleton observations)
+(MWFE estimator converged in 12 iterations)
+
+HDFE Linear regression                            Number of obs   =     97,703
+Absorbing 3 HDFE groups                           F(   4,  18369) =      60.18
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.8873
+                                                  Adj R-squared   =     0.8558
+                                                  Within R-sq.    =     0.0035
+Number of clusters (dyad)    =     18,370         Root MSE        =     1.1690
+
+                              (Std. err. adjusted for 18,370 clusters in dyad)
+------------------------------------------------------------------------------
+             |               Robust
+      ltrade | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      comcur |  -.3463499    .422095    -0.82   0.412    -1.173695    .4809956
+ comcur_gdpo |    .007632   .0256409     0.30   0.766    -.0426264    .0578905
+ comcur_gdpd |   .0339683   .0230585     1.47   0.141    -.0112285    .0791652
+         rta |    .424883   .0306215    13.88   0.000     .3648619    .4849041
+       _cons |   15.06692   .0023348  6453.30   0.000     15.06235     15.0715
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-----------------------------------------------------+
+ Absorbed FE | Categories  - Redundant  = Num. Coefs |
+-------------+---------------------------------------|
+          it |      1485           1        1484     |
+          jt |      1489          10        1479     |
+        dyad |     18370       18370           0    *|
+-----------------------------------------------------+
+* = FE nested within cluster; treated as redundant for DoF computation
+(est3 stored)
+
+. *
+. eststo: xtpqml flow_dots comcur lgdp_o lgdp_d comcur_gdpo comcur_gdpd  rta yeard*, fe cluster(dyad)
+note: 63 groups (63 obs) dropped because of only one obs per group
+note: 6305 groups (31283 obs) dropped because of all zero outcomes
+note: yeard2 omitted because of collinearity.
+
+Iteration 0:  Log likelihood = -1.392e+13  
+Iteration 1:  Log likelihood = -4.249e+12  
+Iteration 2:  Log likelihood = -1.779e+12  
+Iteration 3:  Log likelihood = -1.666e+12  
+Iteration 4:  Log likelihood = -1.664e+12  
+Iteration 5:  Log likelihood = -1.664e+12  
+Iteration 6:  Log likelihood = -1.664e+12  
+
+Conditional fixed-effects Poisson regression       Number of obs    =  156,220
+Group variable: dyad                               Number of groups =   21,943
+
+                                                   Obs per group:
+                                                                min =        2
+                                                                avg =      7.1
+                                                                max =       10
+
+                                                   Wald chi2(15)    = 1.33e+13
+Log likelihood = -1.664e+12                        Prob > chi2      =   0.0000
+
+------------------------------------------------------------------------------
+   flow_dots | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      comcur |   3.012595   .0000309  9.8e+04   0.000     3.012534    3.012655
+      lgdp_o |    1.20067   1.35e-06  8.9e+05   0.000     1.200667    1.200673
+      lgdp_d |   .9376335   1.51e-06  6.2e+05   0.000     .9376306    .9376365
+ comcur_gdpo |  -.0990894   1.20e-06 -8.3e+04   0.000    -.0990917    -.099087
+ comcur_gdpd |  -.0364709   1.18e-06 -3.1e+04   0.000    -.0364732   -.0364686
+         rta |   .3195767   1.07e-06  3.0e+05   0.000     .3195746    .3195788
+      yeard1 |   .2912612   4.63e-06  6.3e+04   0.000     .2912521    .2912703
+      yeard3 |  -.4265466   3.74e-06 -1.1e+05   0.000     -.426554   -.4265393
+      yeard4 |  -.5947736   3.72e-06 -1.6e+05   0.000    -.5947809   -.5947663
+      yeard5 |  -1.005646   4.26e-06 -2.4e+05   0.000    -1.005654   -1.005637
+      yeard6 |  -1.742158   4.77e-06 -3.7e+05   0.000    -1.742167   -1.742148
+      yeard7 |  -1.955223   5.29e-06 -3.7e+05   0.000    -1.955233   -1.955213
+      yeard8 |  -2.126689   5.71e-06 -3.7e+05   0.000      -2.1267   -2.126678
+      yeard9 |  -2.425521   6.16e-06 -3.9e+05   0.000    -2.425533   -2.425509
+     yeard10 |  -2.604829   6.70e-06 -3.9e+05   0.000    -2.604842   -2.604816
+------------------------------------------------------------------------------
+Calculating Robust Standard Errors...
+------------------------------------------------------------------------------
+   flow_dots | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+flow_dots    |
+      comcur |   3.012595   1.227131     2.45   0.014     .6074615    5.417728
+      lgdp_o |    1.20067   .0966021    12.43   0.000     1.011333    1.390007
+      lgdp_d |   .9376335   .0671623    13.96   0.000     .8059979    1.069269
+ comcur_gdpo |  -.0990894   .0387383    -2.56   0.011     -.175015   -.0231638
+ comcur_gdpd |  -.0364709    .033683    -1.08   0.279    -.1024884    .0295465
+         rta |   .3195767   .0823172     3.88   0.000     .1582379    .4809156
+      yeard1 |   .2912612   .0401841     7.25   0.000     .2125019    .3700205
+      yeard3 |  -.4265466   .0559529    -7.62   0.000    -.5362122   -.3168811
+      yeard4 |  -.5947736   .1133155    -5.25   0.000    -.8168679   -.3726792
+      yeard5 |  -1.005646   .1753745    -5.73   0.000    -1.349373   -.6619178
+      yeard6 |  -1.742158   .2154669    -8.09   0.000    -2.164465   -1.319851
+      yeard7 |  -1.955223   .2575633    -7.59   0.000    -2.460038   -1.450408
+      yeard8 |  -2.126689   .2828534    -7.52   0.000    -2.681071   -1.572306
+      yeard9 |  -2.425521   .3077151    -7.88   0.000    -3.028632   -1.822411
+     yeard10 |  -2.604829   .3378775    -7.71   0.000    -3.267057   -1.942601
+------------------------------------------------------------------------------
+Wald chi2(15) = 11673.30                                Prob > chi2 =   0.0000
+(est4 stored)
+
+. *
+. set linesize 250
+
+. esttab, mtitles drop(yeard*) b(%5.3f) se(%5.3f) compress r2 starlevels(c 0.1 b 0.05 a 0.01)  se 
+
+------------------------------------------------------
+                 (1)        (2)        (3)        (4) 
+                est1       est2       est3       est4 
+------------------------------------------------------
+main                                                  
+comcur         2.050a     4.118a    -0.346      3.013b
+             (0.407)    (0.392)    (0.422)    (1.227) 
+
+lgdp_o         1.143a                           1.201a
+             (0.030)                          (0.097) 
+
+lgdp_d         0.957a                           0.938a
+             (0.029)                          (0.067) 
+
+comcur_g~o    -0.110a    -0.006      0.008     -0.099b
+             (0.026)    (0.028)    (0.026)    (0.039) 
+
+comcur_g~d     0.027     -0.217a     0.034     -0.036 
+             (0.023)    (0.030)    (0.023)    (0.034) 
+
+rta            0.547a     0.699a     0.425a     0.320a
+             (0.029)    (0.044)    (0.031)    (0.082) 
+
+ldist                    -1.172a                      
+                        (0.018)                       
+
+contig                    0.506a                      
+                        (0.076)                       
+
+comlang_~f                0.553a                      
+                        (0.032)                       
+
+colony                    1.240a                      
+                        (0.071)                       
+
+_cons        -22.520a    24.830a    15.067a           
+             (0.765)    (0.159)    (0.002)            
+------------------------------------------------------
+N             101343     101327      97703     156220 
+R-sq           0.413      0.728      0.887            
+------------------------------------------------------
+Standard errors in parentheses
+c p<0.1, b p<0.05, a p<0.01
+
+. esttab, mtitles drop(yeard*) b(%5.3f) se(%5.3f) r2  starlevels({$^c$} 0.1 {$^b$} 0.05 {$^a$} 0.01) se tex label title() 
+
+{
+\def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
+\begin{tabular}{l*{4}{c}}
+\hline\hline
+                    &\multicolumn{1}{c}{(1)}&\multicolumn{1}{c}{(2)}&\multicolumn{1}{c}{(3)}&\multicolumn{1}{c}{(4)}\\
+                    &\multicolumn{1}{c}{est1}&\multicolumn{1}{c}{est2}&\multicolumn{1}{c}{est3}&\multicolumn{1}{c}{est4}\\
+\hline
+main                &                  &                  &                  &                  \\
+=1 if iso\_o and iso\_d use a common currency at year t&       2.050{$^a$}&       4.118{$^a$}&      -0.346      &       3.013{$^b$}\\
+                    &     (0.407)      &     (0.392)      &     (0.422)      &     (1.227)      \\
+[1em]
+lgdp\_o              &       1.143{$^a$}&                  &                  &       1.201{$^a$}\\
+                    &     (0.030)      &                  &                  &     (0.097)      \\
+[1em]
+lgdp\_d              &       0.957{$^a$}&                  &                  &       0.938{$^a$}\\
+                    &     (0.029)      &                  &                  &     (0.067)      \\
+[1em]
+comcur\_gdpo         &      -0.110{$^a$}&      -0.006      &       0.008      &      -0.099{$^b$}\\
+                    &     (0.026)      &     (0.028)      &     (0.026)      &     (0.039)      \\
+[1em]
+comcur\_gdpd         &       0.027      &      -0.217{$^a$}&       0.034      &      -0.036      \\
+                    &     (0.023)      &     (0.030)      &     (0.023)      &     (0.034)      \\
+[1em]
+=1 for regional trade agreement in force&       0.547{$^a$}&       0.699{$^a$}&       0.425{$^a$}&       0.320{$^a$}\\
+                    &     (0.029)      &     (0.044)      &     (0.031)      &     (0.082)      \\
+[1em]
+ldist               &                  &      -1.172{$^a$}&                  &                  \\
+                    &                  &     (0.018)      &                  &                  \\
+[1em]
+1 for contiguity    &                  &       0.506{$^a$}&                  &                  \\
+                    &                  &     (0.076)      &                  &                  \\
+[1em]
+1 for common official of primary language&                  &       0.553{$^a$}&                  &                  \\
+                    &                  &     (0.032)      &                  &                  \\
+[1em]
+1 for pairs ever in colonial relationship&                  &       1.240{$^a$}&                  &                  \\
+                    &                  &     (0.071)      &                  &                  \\
+[1em]
+Constant            &     -22.520{$^a$}&      24.830{$^a$}&      15.067{$^a$}&                  \\
+                    &     (0.765)      &     (0.159)      &     (0.002)      &                  \\
+\hline
+Observations        &      101343      &      101327      &       97703      &      156220      \\
+\(R^{2}\)           &       0.413      &       0.728      &       0.887      &                  \\
+\hline\hline
+\multicolumn{5}{l}{\footnotesize Standard errors in parentheses}\\
+\multicolumn{5}{l}{\footnotesize {$^c$} p<0.1, {$^b$} p<0.05, {$^a$} p<0.01}\\
+\end{tabular}
+}
+
+. eststo clear
+
+. 
+end of do-file
+
+. do "C:\Users\HP\AppData\Local\Temp\STD6a9c_000000.tmp"
+
+. ***************
+. * Using a Poisson estimator to estimate the gravity equation *
+. ***************
+. 
+. use working_sample1, clear
+
+. 
+. eststo: xtpqml flow_dots lgdp_o  lgdp_d comcur  rta yeard*, fe cluster(dyad)
+note: 63 groups (63 obs) dropped because of only one obs per group
+note: 6305 groups (31283 obs) dropped because of all zero outcomes
+note: yeard2 omitted because of collinearity.
+
+Iteration 0:  Log likelihood = -1.392e+13  
+Iteration 1:  Log likelihood = -4.256e+12  
+Iteration 2:  Log likelihood = -1.783e+12  
+Iteration 3:  Log likelihood = -1.670e+12  
+Iteration 4:  Log likelihood = -1.668e+12  
+Iteration 5:  Log likelihood = -1.668e+12  
+Iteration 6:  Log likelihood = -1.668e+12  
+
+Conditional fixed-effects Poisson regression       Number of obs    =  156,220
+Group variable: dyad                               Number of groups =   21,943
+
+                                                   Obs per group:
+                                                                min =        2
+                                                                avg =      7.1
+                                                                max =       10
+
+                                                   Wald chi2(13)    = 1.33e+13
+Log likelihood = -1.668e+12                        Prob > chi2      =   0.0000
+
+------------------------------------------------------------------------------
+   flow_dots | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      lgdp_o |   1.204756   1.35e-06  8.9e+05   0.000     1.204754    1.204759
+      lgdp_d |   .9385511   1.51e-06  6.2e+05   0.000     .9385481     .938554
+      comcur |   .2561181   1.42e-06  1.8e+05   0.000     .2561153    .2561209
+         rta |   .3186322   1.07e-06  3.0e+05   0.000     .3186301    .3186343
+      yeard1 |   .3018022   4.63e-06  6.5e+04   0.000     .3017931    .3018112
+      yeard3 |  -.4346959   3.74e-06 -1.2e+05   0.000    -.4347032   -.4346886
+      yeard4 |  -.6071165   3.72e-06 -1.6e+05   0.000    -.6071238   -.6071092
+      yeard5 |   -1.02432   4.26e-06 -2.4e+05   0.000    -1.024328   -1.024311
+      yeard6 |  -1.763177   4.77e-06 -3.7e+05   0.000    -1.763186   -1.763168
+      yeard7 |  -1.978075   5.29e-06 -3.7e+05   0.000    -1.978085   -1.978064
+      yeard8 |  -2.151234   5.71e-06 -3.8e+05   0.000    -2.151245   -2.151223
+      yeard9 |   -2.45168   6.16e-06 -4.0e+05   0.000    -2.451692   -2.451668
+     yeard10 |  -2.635405   6.70e-06 -3.9e+05   0.000    -2.635419   -2.635392
+------------------------------------------------------------------------------
+Calculating Robust Standard Errors...
+------------------------------------------------------------------------------
+   flow_dots | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+flow_dots    |
+      lgdp_o |   1.204756   .0969816    12.42   0.000     1.014676    1.394837
+      lgdp_d |   .9385511   .0678005    13.84   0.000     .8056646    1.071437
+      comcur |   .2561181   .0412868     6.20   0.000     .1751974    .3370387
+         rta |   .3186322   .0824691     3.86   0.000     .1569958    .4802686
+      yeard1 |   .3018022   .0398429     7.57   0.000     .2237116    .3798927
+      yeard3 |  -.4346959   .0561468    -7.74   0.000    -.5447417   -.3246502
+      yeard4 |  -.6071165   .1137837    -5.34   0.000    -.8301283   -.3841046
+      yeard5 |   -1.02432   .1759304    -5.82   0.000    -1.369137   -.6795024
+      yeard6 |  -1.763177   .2166343    -8.14   0.000    -2.187773   -1.338582
+      yeard7 |  -1.978075   .2589239    -7.64   0.000    -2.485556   -1.470593
+      yeard8 |  -2.151234   .2845871    -7.56   0.000    -2.709014   -1.593453
+      yeard9 |   -2.45168    .309593    -7.92   0.000    -3.058471   -1.844889
+     yeard10 |  -2.635405   .3396565    -7.76   0.000     -3.30112   -1.969691
+------------------------------------------------------------------------------
+Wald chi2(13) = 12101.70                                Prob > chi2 =   0.0000
+(est1 stored)
+
+. * Or with exporter x year and importer x year FE
+. eststo: ppmlhdfe flow_dots comcur  rta, a (it jt dyad) cluster(dyad)
+(dropped 48487 observations that are either singletons or separated by a fixed effect)
+Iteration 1:   deviance = 1.4132e+13  eps = .         iters = 6    tol = 1.0e-04  min(eta) =  -5.75  P   
+Iteration 2:   deviance = 5.5867e+12  eps = 1.53e+00  iters = 5    tol = 1.0e-04  min(eta) =  -7.36      
+Iteration 3:   deviance = 3.4746e+12  eps = 6.08e-01  iters = 5    tol = 1.0e-04  min(eta) =  -9.54      
+Iteration 4:   deviance = 2.8117e+12  eps = 2.36e-01  iters = 5    tol = 1.0e-04  min(eta) = -11.71      
+Iteration 5:   deviance = 2.6053e+12  eps = 7.92e-02  iters = 4    tol = 1.0e-04  min(eta) = -13.77      
+Iteration 6:   deviance = 2.5450e+12  eps = 2.37e-02  iters = 4    tol = 1.0e-04  min(eta) = -16.08      
+Iteration 7:   deviance = 2.5289e+12  eps = 6.39e-03  iters = 3    tol = 1.0e-04  min(eta) = -17.98      
+Iteration 8:   deviance = 2.5248e+12  eps = 1.61e-03  iters = 3    tol = 1.0e-04  min(eta) = -19.08      
+Iteration 9:   deviance = 2.5238e+12  eps = 3.84e-04  iters = 2    tol = 1.0e-04  min(eta) = -20.12      
+Iteration 10:  deviance = 2.5236e+12  eps = 8.31e-05  iters = 2    tol = 1.0e-04  min(eta) = -21.60      
+Iteration 11:  deviance = 2.5236e+12  eps = 1.50e-05  iters = 2    tol = 1.0e-05  min(eta) = -23.05      
+Iteration 12:  deviance = 2.5236e+12  eps = 1.97e-06  iters = 2    tol = 1.0e-05  min(eta) = -24.09   S  
+Iteration 13:  deviance = 2.5236e+12  eps = 1.51e-07  iters = 2    tol = 1.0e-06  min(eta) = -24.78   S  
+Iteration 14:  deviance = 2.5236e+12  eps = 8.09e-09  iters = 2    tol = 1.0e-07  min(eta) = -25.13   S  
+Iteration 15:  deviance = 2.5236e+12  eps = 2.75e-10  iters = 2    tol = 1.0e-08  min(eta) = -25.21   S  
+Iteration 16:  deviance = 2.5236e+12  eps = 6.96e-13  iters = 3    tol = 1.0e-09  min(eta) = -25.22   S O
+------------------------------------------------------------------------------------------------------------
+(legend: p: exact partial-out   s: exact solver   h: step-halving   o: epsilon below tolerance)
+Converged in 16 iterations and 52 HDFE sub-iterations (tol = 1.0e-08)
+
+HDFE PPML regression                              No. of obs      =    191,697
+Absorbing 3 HDFE groups                           Residual df     =     25,251
+Statistics robust to heteroskedasticity           Wald chi2(2)    =      25.82
+Deviance             =  2.52357e+12               Prob > chi2     =     0.0000
+Log pseudolikelihood = -1.26178e+12               Pseudo R2       =     0.9891
+
+Number of clusters (dyad)   =     25,252
+                              (Std. err. adjusted for 25,252 clusters in dyad)
+------------------------------------------------------------------------------
+             |               Robust
+   flow_dots | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      comcur |   .0243146   .0430785     0.56   0.572    -.0601177     .108747
+         rta |   .1734115   .0341293     5.08   0.000     .1065193    .2403037
+       _cons |   22.59579   .0144122  1567.82   0.000     22.56755    22.62404
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-----------------------------------------------------+
+ Absorbed FE | Categories  - Redundant  = Num. Coefs |
+-------------+---------------------------------------|
+          it |      1764           1        1763     |
+          jt |      1766          10        1756     |
+        dyad |     25252       25252           0    *|
+-----------------------------------------------------+
+* = FE nested within cluster; treated as redundant for DoF computation
+(est2 stored)
+
+. 
+. set linesize 250
+
+. esttab, mtitles drop(yeard*) b(%5.3f) se(%5.3f) compress r2 starlevels(c 0.1 b 0.05 a 0.01)  se 
+
+--------------------------------
+                 (1)        (2) 
+                est1       est2 
+--------------------------------
+main                            
+lgdp_o         1.205a           
+             (0.097)            
+
+lgdp_d         0.939a           
+             (0.068)            
+
+comcur         0.256a     0.024 
+             (0.041)    (0.043) 
+
+rta            0.319a     0.173a
+             (0.082)    (0.034) 
+
+_cons                    22.596a
+                        (0.014) 
+--------------------------------
+N             156220     191697 
+R-sq                            
+--------------------------------
+Standard errors in parentheses
+c p<0.1, b p<0.05, a p<0.01
+
+. esttab, mtitles drop(yeard*) b(%5.3f) se(%5.3f) r2  starlevels({$^c$} 0.1 {$^b$} 0.05 {$^a$} 0.01) se tex label title() 
+
+{
+\def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
+\begin{tabular}{l*{2}{c}}
+\hline\hline
+                    &\multicolumn{1}{c}{(1)}&\multicolumn{1}{c}{(2)}\\
+                    &\multicolumn{1}{c}{est1}&\multicolumn{1}{c}{est2}\\
+\hline
+main                &                  &                  \\
+lgdp\_o              &       1.205{$^a$}&                  \\
+                    &     (0.097)      &                  \\
+[1em]
+lgdp\_d              &       0.939{$^a$}&                  \\
+                    &     (0.068)      &                  \\
+[1em]
+=1 if iso\_o and iso\_d use a common currency at year t&       0.256{$^a$}&       0.024      \\
+                    &     (0.041)      &     (0.043)      \\
+[1em]
+=1 for regional trade agreement in force&       0.319{$^a$}&       0.173{$^a$}\\
+                    &     (0.082)      &     (0.034)      \\
+[1em]
+Constant            &                  &      22.596{$^a$}\\
+                    &                  &     (0.014)      \\
+\hline
+Observations        &      156220      &      191697      \\
+\(R^{2}\)           &                  &                  \\
+\hline\hline
+\multicolumn{3}{l}{\footnotesize Standard errors in parentheses}\\
+\multicolumn{3}{l}{\footnotesize {$^c$} p<0.1, {$^b$} p<0.05, {$^a$} p<0.01}\\
+\end{tabular}
+}
+
+. eststo clear
+
+. *
+. 
+end of do-file
+
+. do "C:\Users\HP\AppData\Local\Temp\STD6a9c_000000.tmp"
+
+. * Investigating the effect of the Euro on trade using this dataset *
+. **************
+. * build the eurozone dummy   *
+. **************
+. use working_sample1, clear
+
+. foreach x in o d{
+  2.         g currency_`x' = ""
+  3.         /* list countries from J. de Sousa */
+.         ** Andorra
+.         replace currency_`x'= "EUR" if (iso_`x'=="AND") & (year>=1999)                  
+  4.         ** Austria
+.         replace currency_`x'= "EUR" if (iso_`x'=="AUT") & (year>=1999)                  
+  5.         ** Belgium
+.         replace currency_`x'= "EUR" if (iso_`x'=="BEL") & (year>=1999)                  
+  6.         ** Finland
+.         replace currency_`x'= "EUR" if (iso_`x'=="FIN") & (year>=1999)                  
+  7.         ** France
+.         replace currency_`x'= "EUR" if (iso_`x'=="FRA") & (year>=1999)                  
+  8.         ** French Guiana
+.         replace currency_`x'= "EUR" if (iso_`x'=="GUF") & (year>=1999)                  
+  9.         ** Guadeloupe
+.         replace currency_`x'= "EUR" if (iso_`x'=="GLP") & (year>=1999)                  
+ 10.         ** Germany
+.         replace currency_`x'= "EUR" if (iso_`x'=="DEU") & (year>=1999)                  
+ 11.         ** Ireland
+.         replace currency_`x'= "EUR" if (iso_`x'=="IRL") & (year>=1999)                  
+ 12.         ** Italy
+.         replace currency_`x'= "EUR" if (iso_`x'=="ITA") & (year>=1999)                  
+ 13.         ** Luxembourg
+.         replace currency_`x'= "EUR" if (iso_`x'=="LUX") & (year>=1999)                  
+ 14.         ** Martinique
+.         replace currency_`x'= "EUR" if (iso_`x'=="MTQ") & (year>=1999)                  
+ 15.         ** Monaco
+.         replace currency_`x'= "EUR" if (iso_`x'=="MCO") & (year>=1999)                  
+ 16.         ** Netherlands
+.         replace currency_`x'= "EUR" if (iso_`x'=="NLD") & (year>=1999)                  
+ 17.         ** Portugal
+.         replace currency_`x'= "EUR" if (iso_`x'=="PRT") & (year>=1999)                  
+ 18.         ** Reunion 
+.         replace currency_`x'= "EUR" if (iso_`x'=="REU") & (year>=1999)                  
+ 19.         ** San Marino
+.         replace currency_`x'= "EUR" if (iso_`x'=="SMR") & (year>=1999)                  
+ 20.         ** Spain
+.         replace currency_`x'= "EUR" if (iso_`x'=="ESP") & (year>=1999)                  
+ 21.         ** St. Pierre and Miquelon
+.         replace currency_`x'= "EUR" if (iso_`x'=="SPM") & (year>=1999)                  
+ 22.         ** Greece
+.         replace currency_`x'= "EUR" if (iso_`x'=="GRC") & (year>=2001)                  
+ 23.         ** Montenegro 
+.         replace currency_`x'= "EUR" if (iso_`x'=="MNE") & (year>=2002)                  
+ 24.         ** Slovenia
+.         replace currency_`x'= "EUR" if (iso_`x'=="SVN") & (year>=2007)                  
+ 25.         ** Cyprus
+.         replace currency_`x'= "EUR" if (iso_`x'=="CYP") & (year>=2008)                  
+ 26.         ** Malta
+.         replace currency_`x'= "EUR" if (iso_`x'=="MLT") & (year>=2008)
+ 27.         ** Slovakia
+.         replace currency_`x'= "EUR" if (iso_`x'=="SVK") & (year>=2009)          
+ 28.         tab currency_`x'
+ 29. }
+(361,100 missing values generated)
+(0 real changes made)
+variable currency_o was str1 now str3
+(406 real changes made)
+(408 real changes made)
+(406 real changes made)
+(406 real changes made)
+(280 real changes made)
+(362 real changes made)
+(408 real changes made)
+(406 real changes made)
+(406 real changes made)
+(0 real changes made)
+(300 real changes made)
+(0 real changes made)
+(406 real changes made)
+(406 real changes made)
+(330 real changes made)
+(0 real changes made)
+(406 real changes made)
+(208 real changes made)
+(203 real changes made)
+(0 real changes made)
+(0 real changes made)
+(0 real changes made)
+(0 real changes made)
+(0 real changes made)
+
+ currency_o |      Freq.     Percent        Cum.
+------------+-----------------------------------
+        EUR |      5,747      100.00      100.00
+------------+-----------------------------------
+      Total |      5,747      100.00
+(361,100 missing values generated)
+(0 real changes made)
+variable currency_d was str1 now str3
+(406 real changes made)
+(408 real changes made)
+(406 real changes made)
+(406 real changes made)
+(280 real changes made)
+(362 real changes made)
+(408 real changes made)
+(406 real changes made)
+(406 real changes made)
+(0 real changes made)
+(300 real changes made)
+(0 real changes made)
+(406 real changes made)
+(406 real changes made)
+(330 real changes made)
+(0 real changes made)
+(406 real changes made)
+(208 real changes made)
+(203 real changes made)
+(0 real changes made)
+(0 real changes made)
+(0 real changes made)
+(0 real changes made)
+(0 real changes made)
+
+ currency_d |      Freq.     Percent        Cum.
+------------+-----------------------------------
+        EUR |      5,747      100.00      100.00
+------------+-----------------------------------
+      Total |      5,747      100.00
+
+. g euro = (currency_o == "EUR" & currency_d == "EUR")
+
+. *
+. tsset dyad year
+
+Panel variable: dyad (strongly balanced)
+ Time variable: year, 1960 to 2005, but with gaps
+         Delta: 1 unit
+
+. *
+. replace comcur = 0 if euro == 1
+(467 real changes made)
+
+. *
+. eststo: xtreg ltrade euro comcur lgdp_o lgdp_d rta yeard*,  fe cluster(dyad)
+note: yeard10 omitted because of collinearity.
+
+Fixed-effects (within) regression               Number of obs     =    101,362
+Group variable: dyad                            Number of groups  =     22,004
+
+R-squared:                                      Obs per group:
+     Within  = 0.4131                                         min =          1
+     Between = 0.4874                                         avg =        4.6
+     Overall = 0.4946                                         max =         10
+
+                                                F(14, 22003)      =    2022.27
+corr(u_i, Xb) = -0.2772                         Prob > F          =     0.0000
+
+                              (Std. err. adjusted for 22,004 clusters in dyad)
+------------------------------------------------------------------------------
+             |               Robust
+      ltrade | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+        euro |   .7114121   .0552569    12.87   0.000     .6031047    .8197195
+      comcur |   .6425277   .0995171     6.46   0.000      .447467    .8375884
+      lgdp_o |    1.14414   .0303202    37.74   0.000      1.08471    1.203569
+      lgdp_d |   .9593656     .02881    33.30   0.000     .9028959    1.015835
+         rta |   .5361269   .0285905    18.75   0.000     .4800875    .5921664
+      yeard1 |   3.458731   .1433172    24.13   0.000     3.177819    3.739643
+      yeard2 |   3.178397   .1293244    24.58   0.000     2.924912    3.431882
+      yeard3 |   2.570513   .1113108    23.09   0.000     2.352336     2.78869
+      yeard4 |   2.322535   .0896812    25.90   0.000     2.146754    2.498317
+      yeard5 |   1.716656   .0667647    25.71   0.000     1.585793     1.84752
+      yeard6 |    .910305   .0525682    17.32   0.000     .8072676    1.013343
+      yeard7 |   .7196628    .039673    18.14   0.000     .6419008    .7974248
+      yeard8 |   .5166727   .0289466    17.85   0.000     .4599353      .57341
+      yeard9 |   .1563008   .0191585     8.16   0.000     .1187488    .1938528
+     yeard10 |          0  (omitted)
+       _cons |  -22.56978   .7656291   -29.48   0.000    -24.07047   -21.06909
+-------------+----------------------------------------------------------------
+     sigma_u |  2.1717311
+     sigma_e |  1.2773153
+         rho |  .74298248   (fraction of variance due to u_i)
+------------------------------------------------------------------------------
+(est1 stored)
+
+. *
+. eststo: reghdfe ltrade euro comcur ldist rta contig comlang_off colony, a(it jt) vce(cluster dyad)  
+(dropped 19 singleton observations)
+(MWFE estimator converged in 8 iterations)
+
+HDFE Linear regression                            Number of obs   =    120,131
+Absorbing 2 HDFE groups                           F(   7,  25391) =    1470.99
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.7227
+                                                  Adj R-squared   =     0.7144
+                                                  Within R-sq.    =     0.2881
+Number of clusters (dyad)    =     25,392         Root MSE        =     1.6692
+
+                              (Std. err. adjusted for 25,392 clusters in dyad)
+------------------------------------------------------------------------------
+             |               Robust
+      ltrade | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+        euro |  -.4290727    .120762    -3.55   0.000    -.6657732   -.1923722
+      comcur |   .9098691   .0812008    11.21   0.000     .7507109    1.069027
+       ldist |  -1.151254   .0160709   -71.64   0.000    -1.182754   -1.119754
+         rta |    .710332   .0422229    16.82   0.000     .6275726    .7930913
+      contig |   .3218593   .0712086     4.52   0.000     .1822863    .4614322
+ comlang_off |   .5116464   .0302059    16.94   0.000     .4524412    .5708516
+      colony |   1.287876   .0663397    19.41   0.000     1.157847    1.417906
+       _cons |   24.60092   .1411871   174.24   0.000     24.32419    24.87766
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-----------------------------------------------------+
+ Absorbed FE | Categories  - Redundant  = Num. Coefs |
+-------------+---------------------------------------|
+          it |      1756           0        1756     |
+          jt |      1757          10        1747     |
+-----------------------------------------------------+
+(est2 stored)
+
+. *
+. eststo: reghdfe ltrade euro comcur rta,  a(it jt dyad) vce(cluster dyad)  
+(dropped 4451 singleton observations)
+(MWFE estimator converged in 13 iterations)
+
+HDFE Linear regression                            Number of obs   =    115,699
+Absorbing 3 HDFE groups                           F(   3,  20960) =      89.59
+Statistics robust to heteroskedasticity           Prob > F        =     0.0000
+                                                  R-squared       =     0.8820
+                                                  Adj R-squared   =     0.8503
+                                                  Within R-sq.    =     0.0033
+Number of clusters (dyad)    =     20,961         Root MSE        =     1.1905
+
+                              (Std. err. adjusted for 20,961 clusters in dyad)
+------------------------------------------------------------------------------
+             |               Robust
+      ltrade | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+        euro |    .360169   .0749374     4.81   0.000     .2132859    .5070521
+      comcur |   .2867831   .0822456     3.49   0.000     .1255754    .4479908
+         rta |   .4540372   .0298303    15.22   0.000     .3955676    .5125069
+       _cons |   15.02782   .0021227  7079.48   0.000     15.02366    15.03198
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-----------------------------------------------------+
+ Absorbed FE | Categories  - Redundant  = Num. Coefs |
+-------------+---------------------------------------|
+          it |      1756           1        1755     |
+          jt |      1756          10        1746     |
+        dyad |     20961       20961           0    *|
+-----------------------------------------------------+
+* = FE nested within cluster; treated as redundant for DoF computation
+(est3 stored)
+
+. *
+. eststo: xtpqml flow_dots lgdp_o lgdp_d euro comcur rta yeard*, fe cluster(dyad)
+note: 64 groups (64 obs) dropped because of only one obs per group
+note: 6305 groups (31283 obs) dropped because of all zero outcomes
+note: yeard2 omitted because of collinearity.
+
+Iteration 0:  Log likelihood = -1.415e+13  
+Iteration 1:  Log likelihood = -3.659e+12  
+Iteration 2:  Log likelihood = -1.828e+12  
+Iteration 3:  Log likelihood = -1.703e+12  
+Iteration 4:  Log likelihood = -1.700e+12  
+Iteration 5:  Log likelihood = -1.700e+12  
+Iteration 6:  Log likelihood = -1.700e+12  
+
+Conditional fixed-effects Poisson regression       Number of obs    =  156,238
+Group variable: dyad                               Number of groups =   21,952
+
+                                                   Obs per group:
+                                                                min =        2
+                                                                avg =      7.1
+                                                                max =       10
+
+                                                   Wald chi2(14)    = 1.39e+13
+Log likelihood = -1.700e+12                        Prob > chi2      =   0.0000
+
+------------------------------------------------------------------------------
+   flow_dots | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      lgdp_o |   1.159897   1.32e-06  8.8e+05   0.000     1.159894    1.159899
+      lgdp_d |   .8999228   1.48e-06  6.1e+05   0.000     .8999199    .8999257
+        euro |   .2367775   1.44e-06  1.6e+05   0.000     .2367746    .2367803
+      comcur |   .4598821   6.91e-06  6.7e+04   0.000     .4598686    .4598957
+         rta |   .2995499   1.07e-06  2.8e+05   0.000     .2995478     .299552
+      yeard1 |   .2734518   4.63e-06  5.9e+04   0.000     .2734428    .2734609
+      yeard3 |  -.3957592   3.73e-06 -1.1e+05   0.000    -.3957666   -.3957519
+      yeard4 |  -.5237732   3.69e-06 -1.4e+05   0.000    -.5237805    -.523766
+      yeard5 |  -.8938241   4.19e-06 -2.1e+05   0.000    -.8938323   -.8938159
+      yeard6 |  -1.602732   4.68e-06 -3.4e+05   0.000    -1.602742   -1.602723
+      yeard7 |  -1.786305   5.18e-06 -3.4e+05   0.000    -1.786315   -1.786295
+      yeard8 |  -1.936737   5.58e-06 -3.5e+05   0.000    -1.936748   -1.936726
+      yeard9 |  -2.261351   6.05e-06 -3.7e+05   0.000    -2.261362   -2.261339
+     yeard10 |  -2.342763   6.51e-06 -3.6e+05   0.000    -2.342775    -2.34275
+------------------------------------------------------------------------------
+Calculating Robust Standard Errors...
+------------------------------------------------------------------------------
+   flow_dots | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+flow_dots    |
+      lgdp_o |   1.159897   .0960701    12.07   0.000     .9716027    1.348191
+      lgdp_d |   .8999228   .0687909    13.08   0.000     .7650951    1.034751
+        euro |   .2367775   .0434434     5.45   0.000       .15163     .321925
+      comcur |   .4598821   .1598492     2.88   0.004     .1465835    .7731807
+         rta |   .2995499   .0825544     3.63   0.000     .1377462    .4613536
+      yeard1 |   .2734518   .0396528     6.90   0.000     .1957338    .3511699
+      yeard3 |  -.3957592   .0565384    -7.00   0.000    -.5065725    -.284946
+      yeard4 |  -.5237732    .114568    -4.57   0.000    -.7483224   -.2992241
+      yeard5 |  -.8938241   .1773579    -5.04   0.000    -1.241439   -.5462089
+      yeard6 |  -1.602732   .2190882    -7.32   0.000    -2.032137   -1.173327
+      yeard7 |  -1.786305   .2614735    -6.83   0.000    -2.298784   -1.273827
+      yeard8 |  -1.936737   .2880823    -6.72   0.000    -2.501368   -1.372106
+      yeard9 |  -2.261351   .3112052    -7.27   0.000    -2.871301     -1.6514
+     yeard10 |  -2.342763    .346499    -6.76   0.000    -3.021888   -1.663637
+------------------------------------------------------------------------------
+Wald chi2(14) = 12196.33                                Prob > chi2 =   0.0000
+(est4 stored)
+
+. *
+. eststo: ppmlhdfe flow_dots  euro comcur rta, a (it jt dyad) cluster(dyad)
+(dropped 48488 observations that are either singletons or separated by a fixed effect)
+Iteration 1:   deviance = 1.8165e+13  eps = .         iters = 8    tol = 1.0e-04  min(eta) =  -6.69  P   
+Iteration 2:   deviance = 6.6857e+12  eps = 1.72e+00  iters = 7    tol = 1.0e-04  min(eta) =  -8.17      
+Iteration 3:   deviance = 3.8409e+12  eps = 7.41e-01  iters = 6    tol = 1.0e-04  min(eta) = -10.30      
+Iteration 4:   deviance = 2.9348e+12  eps = 3.09e-01  iters = 5    tol = 1.0e-04  min(eta) = -12.50      
+Iteration 5:   deviance = 2.6465e+12  eps = 1.09e-01  iters = 5    tol = 1.0e-04  min(eta) = -14.72      
+Iteration 6:   deviance = 2.5600e+12  eps = 3.38e-02  iters = 4    tol = 1.0e-04  min(eta) = -16.84      
+Iteration 7:   deviance = 2.5362e+12  eps = 9.36e-03  iters = 4    tol = 1.0e-04  min(eta) = -18.81      
+Iteration 8:   deviance = 2.5302e+12  eps = 2.39e-03  iters = 4    tol = 1.0e-04  min(eta) = -20.11      
+Iteration 9:   deviance = 2.5287e+12  eps = 5.80e-04  iters = 3    tol = 1.0e-04  min(eta) = -21.03      
+Iteration 10:  deviance = 2.5284e+12  eps = 1.30e-04  iters = 2    tol = 1.0e-04  min(eta) = -22.43      
+Iteration 11:  deviance = 2.5283e+12  eps = 2.50e-05  iters = 2    tol = 1.0e-04  min(eta) = -23.98      
+Iteration 12:  deviance = 2.5283e+12  eps = 3.66e-06  iters = 2    tol = 1.0e-05  min(eta) = -25.13   S  
+Iteration 13:  deviance = 2.5283e+12  eps = 3.29e-07  iters = 3    tol = 1.0e-06  min(eta) = -25.89   S  
+Iteration 14:  deviance = 2.5283e+12  eps = 1.74e-08  iters = 3    tol = 1.0e-07  min(eta) = -26.32   S  
+Iteration 15:  deviance = 2.5283e+12  eps = 7.62e-10  iters = 3    tol = 1.0e-08  min(eta) = -26.45   S  
+Iteration 16:  deviance = 2.5283e+12  eps = 5.24e-12  iters = 3    tol = 1.0e-09  min(eta) = -26.45   S O
+------------------------------------------------------------------------------------------------------------
+(legend: p: exact partial-out   s: exact solver   h: step-halving   o: epsilon below tolerance)
+Converged in 16 iterations and 64 HDFE sub-iterations (tol = 1.0e-08)
+
+HDFE PPML regression                              No. of obs      =    191,717
+Absorbing 3 HDFE groups                           Residual df     =     25,261
+Statistics robust to heteroskedasticity           Wald chi2(3)    =      47.51
+Deviance             =  2.52831e+12               Prob > chi2     =     0.0000
+Log pseudolikelihood = -1.26416e+12               Pseudo R2       =     0.9933
+
+Number of clusters (dyad)   =     25,262
+                              (Std. err. adjusted for 25,262 clusters in dyad)
+------------------------------------------------------------------------------
+             |               Robust
+   flow_dots | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+        euro |  -.0009526    .042865    -0.02   0.982    -.0849665    .0830614
+      comcur |   .6759492   .1453005     4.65   0.000     .3911655    .9607328
+         rta |   .1749443   .0340061     5.14   0.000     .1082935    .2415951
+       _cons |   23.76196   .0239835   990.76   0.000     23.71495    23.80897
+------------------------------------------------------------------------------
+
+Absorbed degrees of freedom:
+-----------------------------------------------------+
+ Absorbed FE | Categories  - Redundant  = Num. Coefs |
+-------------+---------------------------------------|
+          it |      1764           1        1763     |
+          jt |      1766          10        1756     |
+        dyad |     25262       25262           0    *|
+-----------------------------------------------------+
+* = FE nested within cluster; treated as redundant for DoF computation
+(est5 stored)
+
+. 
+. set linesize 250
+
+. esttab, mtitles drop(yeard*) b(%5.3f) se(%5.3f) compress r2 starlevels(c 0.1 b 0.05 a 0.01)  se 
+
+-----------------------------------------------------------------
+                 (1)        (2)        (3)        (4)        (5) 
+                est1       est2       est3       est4       est5 
+-----------------------------------------------------------------
+main                                                             
+euro           0.711a    -0.429a     0.360a     0.237a    -0.001 
+             (0.055)    (0.121)    (0.075)    (0.043)    (0.043) 
+
+comcur         0.643a     0.910a     0.287a     0.460a     0.676a
+             (0.100)    (0.081)    (0.082)    (0.160)    (0.145) 
+
+lgdp_o         1.144a                           1.160a           
+             (0.030)                          (0.096)            
+
+lgdp_d         0.959a                           0.900a           
+             (0.029)                          (0.069)            
+
+rta            0.536a     0.710a     0.454a     0.300a     0.175a
+             (0.029)    (0.042)    (0.030)    (0.083)    (0.034) 
+
+ldist                    -1.151a                                 
+                        (0.016)                                  
+
+contig                    0.322a                                 
+                        (0.071)                                  
+
+comlang_~f                0.512a                                 
+                        (0.030)                                  
+
+colony                    1.288a                                 
+                        (0.066)                                  
+
+_cons        -22.570a    24.601a    15.028a               23.762a
+             (0.766)    (0.141)    (0.002)               (0.024) 
+-----------------------------------------------------------------
+N             101362     120131     115699     156238     191717 
+R-sq           0.413      0.723      0.882                       
+-----------------------------------------------------------------
+Standard errors in parentheses
+c p<0.1, b p<0.05, a p<0.01
+
+. esttab, mtitles drop(yeard*) b(%5.3f) se(%5.3f) r2  starlevels({$^c$} 0.1 {$^b$} 0.05 {$^a$} 0.01) se tex label title() 
+
+{
+\def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
+\begin{tabular}{l*{5}{c}}
+\hline\hline
+                    &\multicolumn{1}{c}{(1)}&\multicolumn{1}{c}{(2)}&\multicolumn{1}{c}{(3)}&\multicolumn{1}{c}{(4)}&\multicolumn{1}{c}{(5)}\\
+                    &\multicolumn{1}{c}{est1}&\multicolumn{1}{c}{est2}&\multicolumn{1}{c}{est3}&\multicolumn{1}{c}{est4}&\multicolumn{1}{c}{est5}\\
+\hline
+main                &                  &                  &                  &                  &                  \\
+euro                &       0.711{$^a$}&      -0.429{$^a$}&       0.360{$^a$}&       0.237{$^a$}&      -0.001      \\
+                    &     (0.055)      &     (0.121)      &     (0.075)      &     (0.043)      &     (0.043)      \\
+[1em]
+=1 if iso\_o and iso\_d use a common currency at year t&       0.643{$^a$}&       0.910{$^a$}&       0.287{$^a$}&       0.460{$^a$}&       0.676{$^a$}\\
+                    &     (0.100)      &     (0.081)      &     (0.082)      &     (0.160)      &     (0.145)      \\
+[1em]
+lgdp\_o              &       1.144{$^a$}&                  &                  &       1.160{$^a$}&                  \\
+                    &     (0.030)      &                  &                  &     (0.096)      &                  \\
+[1em]
+lgdp\_d              &       0.959{$^a$}&                  &                  &       0.900{$^a$}&                  \\
+                    &     (0.029)      &                  &                  &     (0.069)      &                  \\
+[1em]
+=1 for regional trade agreement in force&       0.536{$^a$}&       0.710{$^a$}&       0.454{$^a$}&       0.300{$^a$}&       0.175{$^a$}\\
+                    &     (0.029)      &     (0.042)      &     (0.030)      &     (0.083)      &     (0.034)      \\
+[1em]
+ldist               &                  &      -1.151{$^a$}&                  &                  &                  \\
+                    &                  &     (0.016)      &                  &                  &                  \\
+[1em]
+1 for contiguity    &                  &       0.322{$^a$}&                  &                  &                  \\
+                    &                  &     (0.071)      &                  &                  &                  \\
+[1em]
+1 for common official of primary language&                  &       0.512{$^a$}&                  &                  &                  \\
+                    &                  &     (0.030)      &                  &                  &                  \\
+[1em]
+1 for pairs ever in colonial relationship&                  &       1.288{$^a$}&                  &                  &                  \\
+                    &                  &     (0.066)      &                  &                  &                  \\
+[1em]
+Constant            &     -22.570{$^a$}&      24.601{$^a$}&      15.028{$^a$}&                  &      23.762{$^a$}\\
+                    &     (0.766)      &     (0.141)      &     (0.002)      &                  &     (0.024)      \\
+\hline
+Observations        &      101362      &      120131      &      115699      &      156238      &      191717      \\
+\(R^{2}\)           &       0.413      &       0.723      &       0.882      &                  &                  \\
+\hline\hline
+\multicolumn{6}{l}{\footnotesize Standard errors in parentheses}\\
+\multicolumn{6}{l}{\footnotesize {$^c$} p<0.1, {$^b$} p<0.05, {$^a$} p<0.01}\\
+\end{tabular}
+}
+
+. eststo clear
+
+. 
+end of do-file
+
+. do "C:\Users\HP\AppData\Local\Temp\STD6a9c_000000.tmp"
+
+. log close
+      name:  <unnamed>
+       log:  E:\trade\PS_2023Solutions (1)\MaterialEx2\Workingsample1.log
+  log type:  text
+ closed on:  19 Mar 2024, 19:32:25
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
